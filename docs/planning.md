@@ -200,18 +200,28 @@ This avoids premature complexity. It also produces a better interview story — 
 
 ## 8. Tech Stack
 
-### 8.1 .NET Service
+### 8.1 Frontend — Next.js
 
-- ASP.NET Core 8 Web API
+- Next.js 14 (App Router) with TypeScript
+- React 18 — Server Components for initial data, Client Components for interactivity
+- Tailwind CSS for styling
+- shadcn/ui for components (Radix-based, Tailwind-styled, copy-paste ownership — no lock-in)
+- TanStack Query (React Query) for client-side data fetching, caching, and mutations
+- Axios for HTTP calls to the .NET API
+- Jest + React Testing Library for component tests
+
+### 8.2 .NET Service
+
+- ASP.NET Core 8 Web API — pure REST, no server-rendered views
 - EF Core 8 with PostgreSQL provider
-- Razor Pages + HTMX for the frontend (server-rendered, no separate frontend build)
 - Hangfire for scheduled jobs (running on Postgres backend)
 - Polly for resilience when calling the Python service
 - Serilog for structured logging
+- CORS configured to allow requests from the Next.js dev server and production domain
 - xUnit + FluentAssertions for tests
-- Clean Architecture layout — Domain, Application, Infrastructure, API/Web
+- Clean Architecture layout — Domain, Application, Infrastructure, Api
 
-### 8.2 Python Service
+### 8.3 Python Service
 
 - FastAPI for the HTTP layer
 - Pydantic for request/response models
@@ -224,27 +234,27 @@ This avoids premature complexity. It also produces a better interview story — 
 - APScheduler for any Python-side scheduled tasks (or triggered by .NET via Hangfire)
 - pytest for tests
 
-### 8.3 Shared Infrastructure
+### 8.4 Shared Infrastructure
 
 - PostgreSQL — shared database, owned by .NET (writes), read-only access for Python where needed
 - Docker — both services containerised, docker-compose for local development
 - Redis — added in phase 2 for caching market data
 - Anthropic Claude Haiku — narrative generation (cheap, fast, good enough for templated narratives)
 
-### 8.4 Hosting
+### 8.5 Hosting
 
 - Development — local on laptop, both services in docker-compose
 - Production — Railway or Fly.io for both services on free tier, Postgres managed
 - Domain — optional, can use Railway-provided URL initially
 
-### 8.5 Tooling
+### 8.6 Tooling
 
 - Git + GitHub from sprint 1
 - GitHub Actions for CI (build + test on every push)
 - Claude Code as primary development tool — used for scaffolding, boilerplate, and exploration
 - Every line of code read and understood before merging — no blind AI commits
 
-### 8.6 Monthly Running Cost Estimate
+### 8.7 Monthly Running Cost Estimate
 
 - Postgres free tier — ₹0
 - Railway/Fly free tier — ₹0
@@ -265,13 +275,23 @@ finadvisor/
 ├── .github/
 │   └── workflows/
 │       ├── dotnet-ci.yml
-│       └── python-ci.yml
+│       ├── python-ci.yml
+│       └── nextjs-ci.yml
 ├── src/
-│   ├── FinAdvisor.Api/              # ASP.NET Core entry point
+│   ├── FinAdvisor.Api/              # ASP.NET Core 8 — pure REST API
 │   ├── FinAdvisor.Domain/           # Entities, value objects, domain logic
 │   ├── FinAdvisor.Application/      # Use cases, interfaces, DTOs
 │   ├── FinAdvisor.Infrastructure/   # EF Core, external service clients, Hangfire jobs
-│   ├── FinAdvisor.Web/              # Razor Pages + HTMX frontend
+│   ├── web/                         # Next.js 14 frontend
+│   │   ├── app/                     # App Router — pages and layouts
+│   │   ├── components/              # Shared React components
+│   │   │   ├── ui/                  # shadcn/ui primitives
+│   │   │   └── features/            # Feature-specific components
+│   │   ├── lib/                     # API client, query hooks, utils
+│   │   ├── types/                   # TypeScript types mirroring .NET DTOs
+│   │   ├── package.json
+│   │   ├── next.config.ts
+│   │   └── Dockerfile
 │   └── analytics-service/           # Python FastAPI service
 │       ├── app/
 │       ├── tests/
@@ -284,6 +304,7 @@ finadvisor/
 └── docs/
     ├── planning.md
     ├── sprint-plan.md
+    ├── design.md
     ├── architecture.md
     ├── sprint-log.md
     └── interview-notes.md
@@ -299,7 +320,7 @@ finadvisor/
 |--------|-------|----------|-----------------|
 | 1 | Foundation & First Endpoint | 2 weeks | Repo, Clean Architecture skeleton, Postgres, health check, CI |
 | 2 | Domain Model & Data Layer | 2 weeks | All core entities, EF Core, repositories, seed data |
-| 3 | Manual Entry & Net Worth View | 2 weeks | Razor Pages UI, net worth dashboard |
+| 3 | Next.js Setup & Net Worth Dashboard | 2 weeks | Next.js + shadcn/ui scaffold, dashboard, manual data entry |
 | 4 | CAS Upload via Python Service | 2 weeks | First polyglot cut, CAS parsing, holdings auto-populated |
 | 5 | XIRR, Benchmarks & SIP Health | 2 weeks | SIP performance view, nightly NAV refresh job |
 | 6 | Goal Engine & Monte Carlo | 2 weeks | Goal probability, percentile bands |

@@ -22,10 +22,10 @@ Built for myself first. If it works for me, it will work for others.
 User Browser
     │
     ▼
-FinAdvisor.Web (Razor Pages + HTMX)
-    │
+src/web  (Next.js 14 + React + Tailwind + shadcn/ui)
+    │  REST (JSON)
     ▼
-FinAdvisor.Api (ASP.NET Core 8)
+FinAdvisor.Api  (ASP.NET Core 8 — pure REST API)
     │
     ├── FinAdvisor.Application (Use Cases, Rules Engine, Interfaces)
     │       │
@@ -46,14 +46,16 @@ FinAdvisor.Api (ASP.NET Core 8)
     └── Hangfire (background jobs: NAV refresh, XIRR calc, monthly plan, recommendations)
 ```
 
-**Two services, one repo.** .NET owns business logic, data, and the frontend. Python owns financial math and AI. .NET calls Python via HTTP REST with Polly resilience. The LLM never produces numbers — it only writes narrative around numbers the rules engine computed.
+**Three services, one repo.** Next.js owns the UI. .NET owns business logic, data, and scheduled jobs — exposed as a REST API. Python owns financial math and AI. .NET calls Python via HTTP REST with Polly resilience. The LLM never produces numbers — it only writes narrative around numbers the rules engine computed.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Web frontend | Razor Pages + HTMX + Tailwind CSS (CDN) |
-| API | ASP.NET Core 8 |
+| Frontend | Next.js 14 (App Router) + React 18 + TypeScript |
+| UI components | shadcn/ui + Tailwind CSS |
+| Data fetching | TanStack Query (React Query) + Axios |
+| API | ASP.NET Core 8 — pure REST |
 | Domain / Application | Clean Architecture, C# |
 | Database | PostgreSQL 16 via EF Core 8 |
 | Background jobs | Hangfire (Postgres storage) |
@@ -64,11 +66,11 @@ FinAdvisor.Api (ASP.NET Core 8)
 | Resilience | Polly (retry, circuit breaker, timeout) |
 | Logging | Serilog → BetterStack |
 | CI | GitHub Actions |
-| Hosting | Railway / Fly.io |
+| Hosting | Railway / Fly.io (API + Python) + Vercel (Next.js) |
 
 ## Local Setup
 
-**Prerequisites:** Docker, Docker Compose, .NET 8 SDK, Python 3.11+
+**Prerequisites:** Docker, Docker Compose, .NET 8 SDK, Python 3.11+, Node.js 20+
 
 ```bash
 # 1. Clone the repo
@@ -84,15 +86,20 @@ docker compose up -d postgres
 # 4. Run EF Core migrations
 dotnet ef database update --project src/FinAdvisor.Infrastructure
 
-# 5. Start the .NET service
+# 5. Start the .NET API (port 5000)
 dotnet run --project src/FinAdvisor.Api
 
-# 6. Start the Python analytics service (in a new terminal)
+# 6. Start the Python analytics service (port 8000)
 cd src/analytics-service
 pip install -e .
 uvicorn app.main:app --reload --port 8000
 
-# 7. Open http://localhost:5000
+# 7. Start the Next.js frontend (port 3000)
+cd src/web
+npm install
+npm run dev
+
+# 8. Open http://localhost:3000
 ```
 
 To run everything in Docker:
@@ -109,6 +116,10 @@ dotnet test
 # Python tests
 cd src/analytics-service
 pytest
+
+# Frontend tests
+cd src/web
+npm test
 ```
 
 ## Project Status
@@ -117,7 +128,7 @@ pytest
 |--------|-------|--------|
 | 1 | Foundation and First Endpoint | Not started |
 | 2 | Domain Model and Data Layer | Not started |
-| 3 | Manual Entry and Net Worth View | Not started |
+| 3 | Next.js Setup and Net Worth Dashboard | Not started |
 | 4 | CAS Upload via Python Service | Not started |
 | 5 | XIRR, Benchmarks, SIP Health | Not started |
 | 6 | Goal Engine with Monte Carlo | Not started |

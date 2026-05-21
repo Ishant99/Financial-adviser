@@ -90,7 +90,7 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 ### Out of Scope — Sprint 1
 
 - No business logic or domain entities beyond `UserProfile`
-- No frontend (Razor Pages) — that is Sprint 3
+- No frontend (Next.js) — that is Sprint 3
 - No Python service — that is Sprint 4
 - No Hangfire jobs — that is Sprint 5
 - No real financial data — seed data is placeholder
@@ -214,7 +214,7 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 ### Out of Scope — Sprint 2
 
-- No UI yet — Razor Pages comes in Sprint 3
+- No UI yet — Next.js comes in Sprint 3
 - No analytics — XIRR, Monte Carlo come in Sprints 5–6
 - No external API calls — market data comes in Sprint 5
 - No recommendations — rules engine comes in Sprint 7
@@ -244,11 +244,11 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 ---
 
-## Sprint 3 — Manual Data Entry and Net Worth View
+## Sprint 3 — Next.js Setup and Net Worth Dashboard
 
-**Goal:** I can manually add holdings, transactions, and goals through a basic UI. The dashboard shows my net worth.
+**Goal:** The Next.js frontend is scaffolded. I can manually add holdings, transactions, and goals. The dashboard shows my net worth pulling from the .NET API.
 
-**Estimated effort:** 20–25 hours
+**Estimated effort:** 25–30 hours
 
 **Status:** `[ ] Not started`
 
@@ -258,92 +258,110 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 ### Tasks
 
-#### 3.1 Project Setup — FinAdvisor.Web
+#### 3.1 .NET API — REST Endpoints
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 3.1.1 | Create `FinAdvisor.Web` Razor Pages project under `src/` | Project compiles, can be added to solution | `[ ]` |
-| 3.1.2 | Add Tailwind CSS via CDN link in `_Layout.cshtml` (no build pipeline) | Tailwind utility classes render correctly in browser | `[ ]` |
-| 3.1.3 | Add HTMX via CDN link in `_Layout.cshtml` | `hx-get`, `hx-post` attributes work in browser | `[ ]` |
-| 3.1.4 | Create shared `_Layout.cshtml` with nav bar, page title slot, notification slot (empty for now), footer | Layout renders consistently across pages | `[ ]` |
-| 3.1.5 | Add `FinAdvisor.Web` to the solution and to docker-compose | `docker compose up` starts Web project on port 5001 | `[ ]` |
+| 3.1.1 | Create `GetNetWorthQuery` + handler: retrieves all holdings, sums by category, returns `NetWorthDto` | Handler returns correct DTO from seed data | `[ ]` |
+| 3.1.2 | Create `AddHoldingCommand`, `UpdateHoldingCommand`, `DeleteHoldingCommand` handlers | CRUD operations work; holdings persisted to DB | `[ ]` |
+| 3.1.3 | Create `AddGoalCommand`, `UpdateGoalCommand` handlers | Goals persisted to DB | `[ ]` |
+| 3.1.4 | Create `AddTransactionCommand`, `GetTransactionsQuery` (with date range + account filter) handlers | Transactions persisted; filtered list returned | `[ ]` |
+| 3.1.5 | Create `AddSipPlanCommand`, `PauseSipPlanCommand`, `ResumeSipPlanCommand` handlers | SIP plans persisted; status toggles correctly | `[ ]` |
+| 3.1.6 | Wire all handlers to API controllers: `HoldingsController`, `GoalsController`, `TransactionsController`, `SipPlansController`, `NetWorthController` | All endpoints return correct JSON | `[ ]` |
+| 3.1.7 | Add FluentValidation to all commands — required fields, units ≥ 0, NAV > 0, allocation sums to 100 | Invalid requests return 400 with problem details | `[ ]` |
+| 3.1.8 | Configure CORS in `Program.cs` to allow `http://localhost:3000` in development | Next.js can call the API without CORS errors | `[ ]` |
 
-#### 3.2 Use Cases in Application Layer
-
-| # | Task | Acceptance Criteria | Status |
-|---|------|---------------------|--------|
-| 3.2.1 | Create `GetNetWorthQuery` + handler: retrieves all holdings, sums by category, returns `NetWorthDto` | Handler returns correct DTO from seed data | `[ ]` |
-| 3.2.2 | Create `AddHoldingCommand` + handler: validates input, persists via repository | Holding saved to DB; returns new ID | `[ ]` |
-| 3.2.3 | Create `UpdateHoldingCommand` + handler | Holding updated in DB | `[ ]` |
-| 3.2.4 | Create `DeleteHoldingCommand` + handler | Holding deleted from DB | `[ ]` |
-| 3.2.5 | Create `AddGoalCommand` + handler | Goal saved to DB | `[ ]` |
-| 3.2.6 | Create `UpdateGoalCommand` + handler | Goal updated in DB | `[ ]` |
-| 3.2.7 | Create `AddTransactionCommand` + handler | Transaction saved to DB | `[ ]` |
-| 3.2.8 | Create `GetTransactionsQuery` with optional date range and account filter + handler | Returns filtered list | `[ ]` |
-| 3.2.9 | Create `AddSipPlanCommand` + handler | SIP plan saved to DB | `[ ]` |
-
-#### 3.3 Dashboard Page
+#### 3.2 Next.js Project Scaffold
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 3.3.1 | Create `Dashboard` Razor Page | Page loads at `/` without errors | `[ ]` |
-| 3.3.2 | Display total net worth as large prominent number | Number matches sum of holdings from seed data | `[ ]` |
-| 3.3.3 | Display net worth breakdown table: category (Equity MF, Debt MF, FD, Bank, EPF, etc.), current value, % of total | Table renders correctly | `[ ]` |
-| 3.3.4 | Display list of accounts with current balance | Accounts from seed data shown | `[ ]` |
-| 3.3.5 | Add HTMX partial refresh for net worth section — clicking a refresh button updates only that section without full page reload | No full page reload on refresh; spinner shows during request | `[ ]` |
-| 3.3.6 | Add placeholder cards for: Monthly Plan (coming soon), Goal Progress (coming soon), Recent Actions (coming soon) | Cards render; they say "Coming in Sprint X" | `[ ]` |
+| 3.2.1 | Create Next.js 14 project with TypeScript under `src/web/`: `npx create-next-app@latest web --typescript --tailwind --app --src-dir` | `npm run dev` starts on port 3000 without errors | `[ ]` |
+| 3.2.2 | Install shadcn/ui and initialise with dark theme: `npx shadcn@latest init` | `components/ui/` folder exists with shadcn config | `[ ]` |
+| 3.2.3 | Add shadcn components used in Sprint 3: `card`, `button`, `badge`, `table`, `dialog`, `alert-dialog`, `separator`, `skeleton`, `toast`, `form`, `input`, `label`, `select` | Each installs without error | `[ ]` |
+| 3.2.4 | Install TanStack Query and Axios: `npm install @tanstack/react-query axios` | Packages in `package.json` | `[ ]` |
+| 3.2.5 | Create `lib/api.ts` — Axios instance with `baseURL` from `NEXT_PUBLIC_API_URL` env var, default `http://localhost:5000` | API instance exported and typed | `[ ]` |
+| 3.2.6 | Create `app/providers.tsx` — wraps children in `QueryClientProvider`; used in `app/layout.tsx` | TanStack Query available across all pages | `[ ]` |
+| 3.2.7 | Create `lib/utils.ts` with `formatCurrency(n)`, `formatPercent(n)`, and shadcn `cn()` helper | `formatCurrency(4732481)` → `"₹47.32L"` | `[ ]` |
+| 3.2.8 | Create `types/api.ts` with TypeScript types mirroring all .NET DTOs from Sprint 3 endpoints | Types match API response shapes | `[ ]` |
+| 3.2.9 | Add `src/web` to `docker-compose.yml` with Node.js image, port 3000, hot-reload volume mount | `docker compose up` starts all three services | `[ ]` |
+| 3.2.10 | Create `.github/workflows/nextjs-ci.yml`: checkout → Node 20 → `npm ci` → `npm run build` → `npm test` | CI passes on push | `[ ]` |
 
-#### 3.4 Holdings Management Pages
-
-| # | Task | Acceptance Criteria | Status |
-|---|------|---------------------|--------|
-| 3.4.1 | Create `Holdings/Index` Razor Page listing all holdings with name, type, value, last updated | Page loads with seed data | `[ ]` |
-| 3.4.2 | Create `Holdings/Create` Razor Page with form: Name, HoldingType (dropdown), AccountId (dropdown), Units, PurchaseNav, CurrentNav, AsOf | Form renders with all fields | `[ ]` |
-| 3.4.3 | Form submission via HTMX `hx-post` — on success show inline confirmation; on error show inline validation messages | No full page reload; inline feedback works | `[ ]` |
-| 3.4.4 | Create `Holdings/Edit` Razor Page pre-populated with existing values | Correct values pre-populated from DB | `[ ]` |
-| 3.4.5 | Add delete button on Holdings/Index with HTMX confirmation (hx-confirm) before submitting delete | Confirmation dialog appears; delete removes row from table via HTMX swap | `[ ]` |
-| 3.4.6 | Server-side validation: all required fields, units ≥ 0, NAV > 0, date not in future | Validation errors appear inline without full page reload | `[ ]` |
-
-#### 3.5 Goals Management Pages
+#### 3.3 Layout and Navigation
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 3.5.1 | Create `Goals/Index` Razor Page listing goals: name, target amount, target date, status | Page loads with seed data | `[ ]` |
-| 3.5.2 | Create `Goals/Create` Razor Page with form: Name, TargetAmount, TargetDate, Priority, AssetAllocation sliders (equity %, debt %, gold %, cash % — must sum to 100) | Form renders; allocation validation shows "must sum to 100" if not | `[ ]` |
-| 3.5.3 | Create `Goals/Edit` Razor Page | Values pre-populated, updates correctly | `[ ]` |
-| 3.5.4 | Goal status actions: Pause, Complete — rendered as buttons, handled via HTMX POST | Status changes visible immediately via HTMX swap | `[ ]` |
+| 3.3.1 | Create `app/layout.tsx` with sidebar layout: fixed left nav (`w-56`) + main content area | Layout renders correctly at `/` | `[ ]` |
+| 3.3.2 | Create `components/features/layout/Sidebar.tsx` with nav links: Home, Plan, SIPs, Goals, Cash Flow, Holdings, Tax, Upload | All links render; active link highlighted using `usePathname()` | `[ ]` |
+| 3.3.3 | Sidebar is hidden on mobile (`hidden md:flex`); mobile gets a bottom tab bar with 5 key destinations | Mobile layout functional | `[ ]` |
+| 3.3.4 | Apply global dark theme: `bg-gray-950 text-gray-100` on `<html>` and `<body>` | Dark background renders across all pages | `[ ]` |
 
-#### 3.6 Transactions Page
-
-| # | Task | Acceptance Criteria | Status |
-|---|------|---------------------|--------|
-| 3.6.1 | Create `Transactions/Index` Razor Page listing last 30 transactions: date, description, amount, type, category | Page loads | `[ ]` |
-| 3.6.2 | Add filter by account and date range using HTMX — changing filters reloads the table partial | Filter works without full page reload | `[ ]` |
-| 3.6.3 | Create `Transactions/Create` Razor Page with form | Transaction saved to DB | `[ ]` |
-
-#### 3.7 SIP Plans Page
+#### 3.4 Dashboard Page
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 3.7.1 | Create `SipPlans/Index` Razor Page listing all SIP plans: fund name, amount, SIP date, status, linked goal | Page loads with seed data | `[ ]` |
-| 3.7.2 | Create `SipPlans/Create` form | SIP plan saved, redirects to index | `[ ]` |
-| 3.7.3 | Pause/Resume SIP action buttons via HTMX | Status toggles correctly | `[ ]` |
+| 3.4.1 | Create `app/page.tsx` (dashboard) — Server Component that fetches net worth for initial render | Page renders with data on first load, no loading flash | `[ ]` |
+| 3.4.2 | Create `components/features/dashboard/NetWorthCard.tsx` — displays hero number, monthly delta, category breakdown | Numbers match seed data from .NET API | `[ ]` |
+| 3.4.3 | Auto-refresh net worth every 60s using TanStack Query `refetchInterval: 60_000` | Number updates in browser without manual refresh | `[ ]` |
+| 3.4.4 | Create `components/features/dashboard/RecommendationFeed.tsx` — three tabs (Actions / Watches / Wins), each showing placeholder "coming in Sprint 7" card | Tabs render and switch correctly | `[ ]` |
+| 3.4.5 | Create `components/features/dashboard/GoalSummaryCard.tsx` — placeholder showing "coming in Sprint 6" for each goal from seed data | Cards render with goal names | `[ ]` |
+| 3.4.6 | Create `components/features/dashboard/MonthlyPlanSummary.tsx` — placeholder "Monthly plan coming in Sprint 8" | Card renders | `[ ]` |
 
-#### 3.8 Tests
-
-| # | Task | Acceptance Criteria | Status |
-|---|------|---------------------|--------|
-| 3.8.1 | Integration tests for `AddHoldingCommand` handler — valid input saves, invalid input throws validation exception | Tests pass | `[ ]` |
-| 3.8.2 | Integration tests for `AddGoalCommand` handler — invalid allocation (doesn't sum to 100) throws | Test passes | `[ ]` |
-| 3.8.3 | Integration tests for `GetNetWorthQuery` — returns correct sum from known seed data | Test passes | `[ ]` |
-
-#### 3.9 Documentation
+#### 3.5 Holdings Page
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 3.9.1 | Add interview note: why server-rendered HTML + HTMX over SPA — the trade-offs, when this is the right call, when it is not | Written | `[ ]` |
-| 3.9.2 | Add interview note: CQRS lite — separating reads (Queries) from writes (Commands) without full CQRS infrastructure | Written | `[ ]` |
-| 3.9.3 | Update `docs/sprint-log.md` | Written | `[ ]` |
+| 3.5.1 | Create `app/holdings/page.tsx` — fetches holdings list, renders in shadcn `Table` | Page loads with seed data | `[ ]` |
+| 3.5.2 | Create `lib/queries/useHoldings.ts` — `useQuery` for GET `/api/holdings`, `useMutation` for POST/PUT/DELETE | Hooks exported and typed | `[ ]` |
+| 3.5.3 | "Add Holding" — shadcn `Dialog` with a form (react-hook-form + zod validation): Name, HoldingType, AccountId, Units, PurchaseNav, CurrentNav, AsOf | Dialog opens; form submits; holding appears in table; dialog closes | `[ ]` |
+| 3.5.4 | "Edit Holding" — same Dialog pre-populated with existing values | Correct values shown; update persists | `[ ]` |
+| 3.5.5 | "Delete Holding" — shadcn `AlertDialog` for confirmation before deleting | Confirmation shown; delete removes row; net worth updates | `[ ]` |
+| 3.5.6 | Client-side validation via zod: required fields, units ≥ 0, NAV > 0 | Form shows inline errors before submitting | `[ ]` |
+| 3.5.7 | Empty state when no holdings exist | Empty state component renders with "Add your first holding" CTA | `[ ]` |
+
+#### 3.6 Goals Page
+
+| # | Task | Acceptance Criteria | Status |
+|---|------|---------------------|--------|
+| 3.6.1 | Create `app/goals/page.tsx` — fetches goals, renders as card list | Page loads with seed data | `[ ]` |
+| 3.6.2 | Create `lib/queries/useGoals.ts` | Hooks exported and typed | `[ ]` |
+| 3.6.3 | "Add Goal" — Dialog with form: Name, TargetAmount, TargetDate, Priority, asset allocation inputs (equity %, debt %, gold %, cash %) | Allocation inputs show live validation "must sum to 100" | `[ ]` |
+| 3.6.4 | "Edit Goal" Dialog pre-populated | Update persists correctly | `[ ]` |
+| 3.6.5 | Pause / Resume Goal — button on each card calls PATCH endpoint; card status updates | Status badge changes immediately (optimistic update) | `[ ]` |
+| 3.6.6 | Empty state when no goals | Empty state renders | `[ ]` |
+
+#### 3.7 Transactions Page
+
+| # | Task | Acceptance Criteria | Status |
+|---|------|---------------------|--------|
+| 3.7.1 | Create `app/transactions/page.tsx` — lists last 30 transactions in a Table | Page loads | `[ ]` |
+| 3.7.2 | Month/account filter — shadcn `Select` components; changing either updates the TanStack Query key, triggering a refetch | Filter works; table updates without page reload | `[ ]` |
+| 3.7.3 | "Add Transaction" — Dialog with form | Transaction saved; table refreshes | `[ ]` |
+
+#### 3.8 SIP Plans Page
+
+| # | Task | Acceptance Criteria | Status |
+|---|------|---------------------|--------|
+| 3.8.1 | Create `app/sips/page.tsx` — lists SIP plans in a Table with fund name, amount, SIP date, status, linked goal | Page loads with seed data | `[ ]` |
+| 3.8.2 | "Add SIP Plan" Dialog | SIP plan saved; table refreshes | `[ ]` |
+| 3.8.3 | Pause / Resume SIP — button on each row | Status toggles; row updates | `[ ]` |
+
+#### 3.9 .NET API Tests
+
+| # | Task | Acceptance Criteria | Status |
+|---|------|---------------------|--------|
+| 3.9.1 | Integration tests for `AddHoldingCommand` handler — valid input saves, invalid input returns validation error | Tests pass | `[ ]` |
+| 3.9.2 | Integration tests for `AddGoalCommand` handler — invalid allocation throws | Test passes | `[ ]` |
+| 3.9.3 | Integration tests for `GetNetWorthQuery` — returns correct sum from known seed data | Test passes | `[ ]` |
+| 3.9.4 | Integration tests confirming CORS header present on API responses | Test passes | `[ ]` |
+
+#### 3.10 Documentation
+
+| # | Task | Acceptance Criteria | Status |
+|---|------|---------------------|--------|
+| 3.10.1 | Add interview note: why Next.js App Router — Server Components for initial load, Client Components for interactivity, where the boundary sits | Written | `[ ]` |
+| 3.10.2 | Add interview note: TanStack Query — why it over raw `useEffect` + `fetch`, what `invalidateQueries` gives you, optimistic updates | Written | `[ ]` |
+| 3.10.3 | Add interview note: CQRS lite — separating reads (Queries) from writes (Commands) without full CQRS infrastructure | Written | `[ ]` |
+| 3.10.4 | Update `docs/sprint-log.md` | Written | `[ ]` |
 
 ---
 
@@ -359,24 +377,26 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 ### Definition of Done — Sprint 3
 
-- [ ] Can add/edit/delete holdings via UI
-- [ ] Can add/edit goals with asset allocation
-- [ ] Dashboard shows correct net worth from seed data
-- [ ] Transactions page loads and filters
+- [ ] Next.js app runs on port 3000, calls .NET API on port 5000 without CORS errors
+- [ ] Can add/edit/delete holdings via Dialog forms
+- [ ] Can add/edit goals with asset allocation validation
+- [ ] Dashboard shows correct net worth from seed data, auto-refreshes every 60s
+- [ ] Transactions page loads and filters by month/account
 - [ ] SIP plans page loads with create/pause actions
-- [ ] All HTMX interactions work without full page reload
-- [ ] Server-side validation works on all forms
+- [ ] Client-side zod validation on all forms
+- [ ] Empty states on all list pages
 - [ ] `dotnet test` passes
-- [ ] CI green on push
+- [ ] `npm run build` passes (no TypeScript errors)
+- [ ] All three CI pipelines green
 
 ---
 
 ### Interview Talking Points — Sprint 3
 
-- Razor Pages vs MVC vs API + SPA: when server-rendered is the right tool
-- HTMX: how it works, why it avoids the complexity of a JS framework for an internal tool
-- CQRS lite: why separating queries and commands even without a full CQRS bus, what it prevents
-- Form validation: server-side vs client-side — why server-side is the source of truth
+- Next.js App Router: Server vs Client Components — the boundary decision, why it matters for performance
+- TanStack Query: what problem it solves over raw fetch + useEffect, cache invalidation strategy
+- CQRS lite: why separating queries and commands even without a full CQRS bus
+- Zod + react-hook-form: client validation as UX, server validation as truth — why both
 
 ---
 
@@ -430,15 +450,15 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 | 4.3.5 | Add Polly resilience pipeline to the `HttpClient`: retry 3 times with exponential backoff (1s, 2s, 4s), circuit breaker (5 failures in 30s → open for 30s), timeout 30s | Polly pipeline configured and unit testable | `[ ]` |
 | 4.3.6 | Add correlation ID header (`X-Correlation-ID`) to all outbound requests from .NET to Python | Verified in Python service logs | `[ ]` |
 
-#### 4.4 CAS Upload UI and Processing
+#### 4.4 CAS Upload UI (Next.js)
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 4.4.1 | Create `CasUpload/Index` Razor Page with file input, optional password field, submit button | Page renders | `[ ]` |
-| 4.4.2 | On upload, call `IAnalyticsService.ParseCasAsync`, map results to `Holding` entities, upsert into DB (update if ISIN+folio exists, insert if not) | After upload, holdings page shows newly imported holdings | `[ ]` |
-| 4.4.3 | Show upload progress via HTMX — spinner during upload, summary on success (X holdings imported, Y updated) | UX works end-to-end | `[ ]` |
-| 4.4.4 | Show clear error messages if Python service is down (circuit breaker open) or PDF is invalid | Error message visible in UI; no unhandled exceptions | `[ ]` |
-| 4.4.5 | Store upload event in a `CasUploadLog` table (timestamp, filename, holdings count, status) | Log entry visible in DB after each upload | `[ ]` |
+| 4.4.1 | Create `app/upload/page.tsx` with `react-dropzone` file drop zone for CAS PDF, optional password input, submit button | Page renders; drag-and-drop zone is styled per design.md | `[ ]` |
+| 4.4.2 | On upload, POST to `.NET /api/upload/cas` (multipart), which calls Python and upserts holdings | After upload, holdings page shows newly imported holdings | `[ ]` |
+| 4.4.3 | Show upload progress — TanStack Query mutation `isPending` state drives a spinner; success shows toast with "X holdings imported, Y updated" | UX works end-to-end | `[ ]` |
+| 4.4.4 | Show inline error if Python service is down or PDF is invalid — error text below the dropzone, not a toast | Error visible in UI; no unhandled exceptions | `[ ]` |
+| 4.4.5 | Store upload event in a `CasUploadLog` table (timestamp, filename, holdings count, status); show upload history list on the page | Log entry and history list visible after each upload | `[ ]` |
 
 #### 4.5 Tests
 
@@ -545,14 +565,14 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 | 5.4.3 | Add `SipPlan.Status` field, update via job after XIRR calculation | Status persisted in DB | `[ ]` |
 | 5.4.4 | Unit tests for `SipStatusEvaluator`: healthy case, watch case, act case, equal to threshold, missing benchmark | All pass | `[ ]` |
 
-#### 5.5 SIP Health View Page
+#### 5.5 SIP Health View Page (Next.js)
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 5.5.1 | Create `SipHealth/Index` Razor Page: table of all SIP plans with columns: Fund Name, Monthly Amount, Current Value, XIRR, Benchmark, Differential, Status badge (colour-coded: green/yellow/red) | Page renders with data from DB | `[ ]` |
-| 5.5.2 | Add SIP detail drill-down page: `SipHealth/Details?id={sipId}` showing full history chart (NAV vs benchmark over time) rendered as HTML table (no chart library yet) | Drill-down page loads | `[ ]` |
+| 5.5.1 | Create `app/sips/page.tsx`: shadcn Table of all SIP plans with columns: Fund Name, Monthly Amount, Current Value, XIRR, Benchmark, Differential, Status badge | Page renders with data from DB | `[ ]` |
+| 5.5.2 | Create `app/sips/[id]/page.tsx` — SIP detail drill-down: fund stats + NAV vs benchmark history as a table (no chart library yet) | Drill-down page loads; clicking a row in the list navigates here | `[ ]` |
 | 5.5.3 | "Last updated" timestamp on index page showing when NAV was last refreshed | Timestamp visible | `[ ]` |
-| 5.5.4 | Manual refresh button using HTMX that triggers NAV refresh for one SIP (calls Hangfire API to enqueue job) | Button works; data updates after a few seconds | `[ ]` |
+| 5.5.4 | Manual refresh button — calls `POST /api/sips/:id/refresh` which enqueues a Hangfire job; button shows loading state via TanStack Query `isPending` then refetches the row | Button works; data updates after a few seconds | `[ ]` |
 
 #### 5.6 Tests
 
@@ -627,10 +647,10 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 6.3.1 | Update `Goals/Index` to show probability badge on each goal card (e.g., "87% on track") | Probabilities visible after job has run | `[ ]` |
-| 6.3.2 | Create `Goals/Details` page showing: current corpus, target amount, monthly contribution, expected completion, probability, P10/P50/P90 corpus projections as a text table (no chart yet) | Page loads and shows correct data | `[ ]` |
+| 6.3.1 | Update `app/goals/page.tsx` — add `ProbabilityBadge` component to each goal card (e.g., "87% on track"), coloured by threshold | Probabilities visible after job has run | `[ ]` |
+| 6.3.2 | Create `app/goals/[id]/page.tsx` showing: current corpus, target amount, monthly contribution, expected completion, probability, P10/P50/P90 corpus projections as a shadcn Table | Page loads and shows correct data | `[ ]` |
 | 6.3.3 | Add projected completion date calculation: `P50Corpus` timeline — how many months until P50 hits target | Displayed on detail page | `[ ]` |
-| 6.3.4 | Update dashboard goal cards to show name, target amount, probability, and days-to-deadline | Dashboard cards updated | `[ ]` |
+| 6.3.4 | Update dashboard goal summary cards to show name, target amount, probability badge, and days-to-deadline | Dashboard cards updated | `[ ]` |
 
 #### 6.4 Tests
 
@@ -721,10 +741,10 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 7.6.1 | Add Actions, Watches, Wins sections to Dashboard — prominently above the fold | Sections visible on dashboard | `[ ]` |
-| 7.6.2 | Each recommendation card shows: icon by severity, title, body, category tag, date generated | Cards render correctly | `[ ]` |
-| 7.6.3 | Mark recommendation as read via HTMX — clicking the card or an X button marks it read | Read recommendations visually dimmed or removed from view | `[ ]` |
-| 7.6.4 | "Actions" count shown as a badge in the nav bar | Badge shows unread action count | `[ ]` |
+| 7.6.1 | Replace placeholder `RecommendationFeed` on dashboard with real data from `GET /api/recommendations`; tabs: Actions / Watches / Wins | Real recommendations visible on dashboard | `[ ]` |
+| 7.6.2 | Each recommendation card shows: left border coloured by severity, title, body, category tag, date generated | Cards render correctly | `[ ]` |
+| 7.6.3 | Mark recommendation as read — X button calls `PATCH /api/recommendations/:id/read` via TanStack mutation; card fades out via optimistic update | Read recommendations removed from feed immediately | `[ ]` |
+| 7.6.4 | "Actions" count badge in sidebar nav — driven by `useRecommendations()` query, updates when recommendations are read | Badge shows unread action count | `[ ]` |
 
 #### 7.7 Tests
 
@@ -813,21 +833,21 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 | 8.3.3 | Create monthly plan email HTML template: plan narrative at top, then Actions / Watches / Wins as sections, clean minimal design | Email renders correctly in Gmail | `[ ]` |
 | 8.3.4 | Add SMTP config to `appsettings.json` and `.env.example` (host, port, user, password) | Config reads from environment; no credentials committed | `[ ]` |
 
-#### 8.4 Monthly Plan Page
+#### 8.4 Monthly Plan Page (Next.js)
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 8.4.1 | Create `MonthlyPlan/Index` Razor Page showing current month's plan | Page loads with the generated plan | `[ ]` |
-| 8.4.2 | Display: narrative paragraph at top, Actions as numbered list, Watches as bullets, Wins as checkmarks | Layout clean and readable | `[ ]` |
-| 8.4.3 | Show previous month plans as a history list: "May 2026 Plan", "April 2026 Plan", etc. | History accessible | `[ ]` |
-| 8.4.4 | Add "Generate Now" button (dev/admin only) to manually trigger plan generation outside the 1st | Button enqueues Hangfire job | `[ ]` |
+| 8.4.1 | Create `app/plan/page.tsx` — fetches current month's plan via `GET /api/monthly-plan/current`, renders full plan | Page loads with the generated plan | `[ ]` |
+| 8.4.2 | Display per design.md: indigo narrative block at top, Actions as numbered list, Watches as bullets, Wins as checkmarks, collapsible plan inputs | Layout clean and readable | `[ ]` |
+| 8.4.3 | Previous plans — shadcn `Select` to switch between months; selecting one loads that plan via `GET /api/monthly-plan/:month` | History accessible | `[ ]` |
+| 8.4.4 | "Generate Now" button — calls `POST /api/monthly-plan/generate` via mutation, shows loading state, toasts on success | Button enqueues Hangfire job; page refetches when done | `[ ]` |
 
 #### 8.5 Dashboard Update
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 8.5.1 | Replace "Coming Soon" Monthly Plan card on dashboard with actual current plan summary: narrative excerpt, action count | Card shows real data | `[ ]` |
-| 8.5.2 | Link "See Full Plan" to `MonthlyPlan/Index` | Link works | `[ ]` |
+| 8.5.1 | Replace "Coming Soon" Monthly Plan card on dashboard with `MonthlyPlanSummary` component showing narrative excerpt + action count | Card shows real data | `[ ]` |
+| 8.5.2 | "See Full Plan" link navigates to `/plan` | Link works | `[ ]` |
 
 #### 8.6 Tests
 
@@ -904,27 +924,27 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
 | 9.3.1 | Extend `IAnalyticsService` with `Task<BankStatementParseResult> ParseBankStatementAsync(Stream pdf)` | Interface and implementation updated | `[ ]` |
-| 9.3.2 | Create `BankStatementUpload` Razor Page | Page renders with file input | `[ ]` |
-| 9.3.3 | On upload: call Python, map parsed transactions to `Transaction` entities, deduplicate (do not import a transaction that already exists with same date + amount + description), save to DB | After upload, transactions page shows new transactions; no duplicates on re-upload | `[ ]` |
-| 9.3.4 | Show import summary: X new transactions imported, Y duplicates skipped | Summary shown in UI via HTMX | `[ ]` |
+| 9.3.2 | Add bank statement upload section to existing `app/upload/page.tsx` — file dropzone + bank selector | Page renders with file input | `[ ]` |
+| 9.3.3 | On upload: call `.NET POST /api/upload/bank-statement`, which calls Python, deduplicates (same date + amount + description), and saves to DB | After upload, transactions page shows new transactions; no duplicates on re-upload | `[ ]` |
+| 9.3.4 | Show import summary toast: "X new transactions imported, Y duplicates skipped" | Summary shown via shadcn toast | `[ ]` |
 
-#### 9.4 Category Management
+#### 9.4 Category Management (Next.js)
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
 | 9.4.1 | Create `CategoryRule` entity in Domain and DB table | Migration applied | `[ ]` |
-| 9.4.2 | Create `Settings/Categories` Razor Page: list existing rules, add new rule (pattern, category), delete rule | CRUD for category rules via UI | `[ ]` |
-| 9.4.3 | Allow manual re-categorisation of an individual transaction from the Transactions page | Clicking category label opens dropdown to change it | `[ ]` |
+| 9.4.2 | Create `app/settings/categories/page.tsx`: list existing rules, "Add Rule" Dialog (pattern, category), delete via AlertDialog | CRUD for category rules via UI | `[ ]` |
+| 9.4.3 | Allow manual re-categorisation of a transaction from `app/transactions/page.tsx` — clicking category badge opens a shadcn `Select` inline | Category updates via `PATCH /api/transactions/:id/category` | `[ ]` |
 
-#### 9.5 Cash Flow View
+#### 9.5 Cash Flow View (Next.js)
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 9.5.1 | Create `CashFlow/Index` Razor Page | Page loads | `[ ]` |
-| 9.5.2 | Current month: total income, total expenses by category, computed surplus | Numbers match transactions in DB | `[ ]` |
-| 9.5.3 | Month selector (HTMX): change month → table updates without full page reload | Month switching works | `[ ]` |
-| 9.5.4 | Comparison row: this month vs last month vs 3-month average for each category | Comparison row shows correct values | `[ ]` |
-| 9.5.5 | Unusual spending flag: if a category is > 50% above its 3-month average, highlight in amber | Flag appears for anomalous categories | `[ ]` |
+| 9.5.1 | Create `app/cashflow/page.tsx` | Page loads | `[ ]` |
+| 9.5.2 | Current month: total income, total expenses by category, computed surplus displayed as summary cards at top | Numbers match transactions in DB | `[ ]` |
+| 9.5.3 | Month selector — shadcn `Select`; changing it updates the TanStack Query key, table refetches automatically | Month switching works without page reload | `[ ]` |
+| 9.5.4 | Comparison columns: this month / last month / 3-month average per category row | Comparison columns show correct values | `[ ]` |
+| 9.5.5 | Unusual spending flag: if a category is > 50% above its 3-month average, amber text + ⚠ icon in that row | Flag appears for anomalous categories | `[ ]` |
 
 #### 9.6 Tests
 
@@ -980,14 +1000,14 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 | 10.1.3 | Create `TaxCalculator` domain service: given gross income, deductions, regime — returns estimated tax liability; implement both old and new regime slabs for FY2526 | Unit tests verify tax calculation against known values from Income Tax India site | `[ ]` |
 | 10.1.4 | Create `RegimeAdvisor`: compares tax liability under old vs new regime given current deductions; recommends regime; outputs breakeven deduction amount | Unit test: given known income and deductions, recommends correct regime | `[ ]` |
 
-#### 10.2 Tax Dashboard
+#### 10.2 Tax Dashboard (Next.js)
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 10.2.1 | Create `Tax/Index` Razor Page with: 80C used vs limit (progress bar), 80D used vs limit, estimated tax under current regime, regime comparison showing both liabilities | Page loads with real values | `[ ]` |
+| 10.2.1 | Create `app/tax/page.tsx` with: 80C shadcn `Progress` bar, 80D progress bar, estimated tax card, regime comparison card | Page loads with real values | `[ ]` |
 | 10.2.2 | Show "₹X more to complete 80C" prominently when 80C < limit | Correct amount shown | `[ ]` |
 | 10.2.3 | Regime recommendation card: "Switch to Old Regime — you save ₹X" or "Stay on New Regime — simpler and saves ₹X" | Recommendation visible | `[ ]` |
-| 10.2.4 | Allow manual input of 80C investments (PPF, ELSS, LIC premium, EPF contribution) and 80D premiums | Form inputs save to TaxProfile | `[ ]` |
+| 10.2.4 | Allow manual input of 80C investments and 80D premiums via Dialog form — calls `PATCH /api/tax/profile` | Form inputs save to TaxProfile | `[ ]` |
 
 #### 10.3 Tax Rules (adds to rules engine from Sprint 7)
 
@@ -1064,18 +1084,20 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 | 11.1.1 | Audit all configuration values — ensure zero secrets in `appsettings.json`; all sensitive values in environment variables | `git grep` for any hardcoded keys, passwords, tokens returns nothing | `[ ]` |
 | 11.1.2 | Create `appsettings.Production.json` with production-appropriate logging levels and settings | File exists; no secrets in it | `[ ]` |
 | 11.1.3 | Add `ASPNETCORE_ENVIRONMENT=Production` to production environment | App starts in Production mode | `[ ]` |
-| 11.1.4 | Add basic auth gate (username/password via ASP.NET Core middleware) for the entire app — single credential, stored in environment variable | App requires login; not accessible without credentials | `[ ]` |
+| 11.1.4 | Add basic auth gate on the .NET API (`Authorization` header check middleware) — single token stored in environment variable; Next.js sends the token on every request | API returns 401 without token; works correctly from Next.js | `[ ]` |
+| 11.1.5 | Set `NEXT_PUBLIC_API_URL` to production .NET API URL in Vercel environment variables | Next.js production build calls the correct API | `[ ]` |
 
-#### 11.2 Railway / Fly.io Deployment
+#### 11.2 Deployment
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
 | 11.2.1 | Create Railway (or Fly.io) project; provision managed Postgres | Postgres connection string available | `[ ]` |
-| 11.2.2 | Deploy .NET service to Railway — configure build from Dockerfile | Service starts and `/api/health` returns 200 | `[ ]` |
-| 11.2.3 | Deploy Python analytics service to Railway | Python service `/health` returns 200 | `[ ]` |
-| 11.2.4 | Configure all environment variables in Railway dashboard (ANTHROPIC_API_KEY, SMTP credentials, Telegram token, etc.) | App starts without config errors | `[ ]` |
-| 11.2.5 | Verify EF Core migrations run on startup in production (or run manually via one-off command) | All tables exist in production Postgres | `[ ]` |
-| 11.2.6 | Create GitHub Actions deploy workflow: on push to `main`, build and deploy to Railway | Auto-deploy works | `[ ]` |
+| 11.2.2 | Deploy .NET service to Railway — configure build from Dockerfile | Service starts and `GET /api/health` returns 200 | `[ ]` |
+| 11.2.3 | Deploy Python analytics service to Railway | Python service `GET /health` returns 200 | `[ ]` |
+| 11.2.4 | Deploy Next.js frontend to Vercel — connect GitHub repo, configure `NEXT_PUBLIC_API_URL` | `npm run build` passes in Vercel; site accessible at Vercel URL | `[ ]` |
+| 11.2.5 | Configure all environment variables: Railway (ANTHROPIC_API_KEY, SMTP, Telegram, DB), Vercel (NEXT_PUBLIC_API_URL, API_TOKEN) | All services start without config errors | `[ ]` |
+| 11.2.6 | Verify EF Core migrations run on startup in production (or run manually via one-off command) | All tables exist in production Postgres | `[ ]` |
+| 11.2.7 | Create GitHub Actions deploy workflows: .NET and Python auto-deploy to Railway on push to `main`; Vercel handles Next.js deploy automatically via GitHub integration | Auto-deploy confirmed for all three services | `[ ]` |
 
 #### 11.3 Observability
 
@@ -1109,9 +1131,9 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 
 ### Definition of Done — Sprint 11
 
-- [ ] Both services deployed and healthy on Railway
-- [ ] All environment variables in Railway, zero secrets in repo
-- [ ] Basic auth gate protecting the app
+- [ ] All three services deployed: .NET + Python on Railway, Next.js on Vercel
+- [ ] All environment variables configured, zero secrets in repo
+- [ ] API token auth gate protecting the .NET API
 - [ ] Logs shipping to BetterStack
 - [ ] Uptime monitor alerting on downtime
 - [ ] Daily Postgres backup with tested restore
@@ -1163,16 +1185,17 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 |---|------|---------------------|--------|
 | 12.3.1 | Profile dashboard page load time — identify and fix the slowest DB query | Dashboard loads in < 500ms | `[ ]` |
 | 12.3.2 | Add `AsNoTracking()` to all read-only EF Core queries | Queries that never write back use no-tracking | `[ ]` |
-| 12.3.3 | Identify any N+1 query patterns in Razor Pages handlers; fix with `.Include()` | No N+1 patterns | `[ ]` |
-| 12.3.4 | Add HTTP response caching for infrequently changing pages (SIP health, goals) — 5 minute cache | Cache headers set correctly | `[ ]` |
+| 12.3.3 | Identify any N+1 query patterns in .NET API controllers; fix with `.Include()` | No N+1 patterns | `[ ]` |
+| 12.3.4 | Add HTTP cache headers on .NET API endpoints that rarely change (SIP health, goals) — `Cache-Control: max-age=300` | Cache headers set correctly; TanStack Query `staleTime` aligned | `[ ]` |
+| 12.3.5 | Profile Next.js bundle size — check for unexpectedly large dependencies with `next build --analyze` | No single chunk > 200KB | `[ ]` |
 
 #### 12.4 UX Polish
 
 | # | Task | Acceptance Criteria | Status |
 |---|------|---------------------|--------|
-| 12.4.1 | Review every page for the top 3 most annoying UX issues I personally encountered during the 10 sprints; fix them | Issues logged in sprint-log, fixes applied | `[ ]` |
-| 12.4.2 | Add empty states to every list page (holdings, goals, transactions, SIPs) — "You haven't added any holdings yet. Add your first holding →" | Empty states visible when DB has no data | `[ ]` |
-| 12.4.3 | Add loading skeletons (CSS only) for HTMX requests > 300ms | Skeleton visible briefly during slow loads | `[ ]` |
+| 12.4.1 | Review every page for the top 3 most annoying UX issues personally encountered during the 10 sprints; fix them | Issues logged in sprint-log, fixes applied | `[ ]` |
+| 12.4.2 | Verify empty states exist on every list page (holdings, goals, transactions, SIPs) — added in Sprint 3 but check they still work with real data | Empty states visible when DB has no data | `[ ]` |
+| 12.4.3 | Verify loading skeletons (shadcn `Skeleton`) show correctly for all TanStack Query `isLoading` states | Skeleton visible briefly on slow connections | `[ ]` |
 | 12.4.4 | Test on mobile browser (Safari on iPhone, Chrome on Android) — fix any layout breakages | Key pages usable on mobile | `[ ]` |
 
 #### 12.5 Interview Preparation
@@ -1190,8 +1213,10 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 |---|------|---------------------|--------|
 | 12.6.1 | Run `dotnet format` and fix all warnings | Zero warnings | `[ ]` |
 | 12.6.2 | Run `ruff check` on Python service and fix all issues | Zero ruff issues | `[ ]` |
-| 12.6.3 | Review all `TODO` comments in code — resolve or create GitHub issues for deferred items | No `TODO` left in code | `[ ]` |
-| 12.6.4 | Verify all CI workflows pass on a clean clone | CI green from zero | `[ ]` |
+| 12.6.3 | Run `tsc --noEmit` on Next.js with strict mode; fix all TypeScript errors | Zero TypeScript errors | `[ ]` |
+| 12.6.4 | Run `npm run lint` (ESLint) on Next.js; fix all lint issues | Zero lint warnings | `[ ]` |
+| 12.6.5 | Review all `TODO` comments in code — resolve or create GitHub issues for deferred items | No `TODO` left in code | `[ ]` |
+| 12.6.6 | Verify all CI workflows pass on a clean clone | CI green from zero | `[ ]` |
 | 12.6.5 | Write `docs/sprint-log.md` final entry: overall project retrospective — what went well, what I would do differently, what I actually learned vs what I expected to learn | Written | `[ ]` |
 
 ---
@@ -1204,8 +1229,8 @@ Sprint length: 2 weeks. Estimated pace: 10–15 hours/week.
 - [ ] Mobile browser: key pages usable
 - [ ] 15+ interview notes written
 - [ ] 5-minute demo video recorded
-- [ ] Zero code warnings, zero ruff issues
-- [ ] CI green
+- [ ] Zero .NET warnings, zero ruff issues, zero TypeScript errors, zero ESLint warnings
+- [ ] All three CI pipelines green
 
 ---
 
@@ -1247,4 +1272,4 @@ These are the values used by the rules engine. Change them here and they update 
 
 ---
 
-*Sprint plan version 1.0 — living document, updated at the end of each sprint.*
+*Sprint plan version 2.0 — updated for Next.js + shadcn/ui frontend (was Razor Pages + HTMX). Living document, updated at the end of each sprint.*
