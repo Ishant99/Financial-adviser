@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: finadvisor-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-finadvisor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finadvisor}
+      POSTGRES_DB: ${POSTGRES_DB:-finadvisor}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finadvisor} -d ${POSTGRES_DB:-finadvisor}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  analytics:
+    build:
+      context: ./src/analytics-service
+      dockerfile: Dockerfile
+    container_name: finadvisor-analytics
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  api:
+    build:
+      context: ./FinAdvisor
+      dockerfile: src/FinAdvisor.Api/Dockerfile
+    container_name: finadvisor-api
+    restart: unless-stopped
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-finadvisor};Username=${POSTGRES_USER:-finadvisor};Password=${POSTGRES_PASSWORD:-finadvisor}"
+      AnalyticsService__BaseUrl: http://analytics:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      analytics:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./src/web
+      dockerfile: Dockerfile
+    container_name: finadvisor-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8080
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

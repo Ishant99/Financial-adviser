@@ -1,0 +1,26 @@
+import { cn } from "@/lib/utils";
+
+interface PageHeaderProps {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
+  className?: string;
+}
+
+/**
+ * Consistent page header used across every screen.
+ * eyebrow (uppercase accent) → title → description, with an optional actions slot.
+ */
+export function PageHeader({ eyebrow, title, description, actions, className }: PageHeaderProps) {
+  return (
+    <div className={cn("flex items-start justify-between gap-4 flex-wrap", className)}>
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow text-indigo-400/80 mb-1">{eyebrow}</p>}
+        <h1 className="text-2xl font-bold text-white tracking-tight leading-tight">{title}</h1>
+        {description && <p className="mt-1.5 text-sm text-gray-400 max-w-xl">{description}</p>}
+      </div>
+      {actions && <div className="flex items-center gap-2 flex-wrap shrink-0">{actions}</div>}
+    </div>
+  );
+}
