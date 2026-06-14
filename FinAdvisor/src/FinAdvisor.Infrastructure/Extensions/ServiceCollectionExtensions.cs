@@ -1,4 +1,5 @@
 using FinAdvisor.Application.Commands.Goals;
+using FinAdvisor.Application.Commands.Plan;
 using FinAdvisor.Application.Commands.SipPlans;
 using FinAdvisor.Application.Interfaces;
 using FinAdvisor.Domain.Entities;
@@ -36,6 +37,9 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<GoalProbabilityBackgroundService>();
         services.AddScoped<ComputeSipXirrCommandHandler>();
         services.AddHostedService<XirrBackgroundService>();
+        services.AddScoped<GenerateMonthlyPlanCommandHandler>();
+        services.AddHostedService<MonthlyPlanBackgroundService>();
+        services.AddScoped<INotificationService, NoOpNotificationService>();
 
         var analyticsBase = configuration["AnalyticsService:BaseUrl"]
             ?? "http://localhost:8000";

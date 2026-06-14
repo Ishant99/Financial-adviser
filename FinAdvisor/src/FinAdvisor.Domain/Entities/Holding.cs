@@ -17,6 +17,10 @@ public class Holding
     // Nullable for backwards-compatibility with holdings created before this field existed.
     public DateOnly? PurchaseDate { get; private set; }
 
+    // Optional classification fields — populated manually or via CAS enrichment
+    public string? Sector { get; private set; }
+    public string? MarketCapCategory { get; private set; }
+
     public Account Account { get; private set; } = null!;
 
     private Holding() { }
@@ -75,5 +79,11 @@ public class Holding
     public void SetPurchaseDate(DateOnly purchaseDate)
     {
         PurchaseDate = purchaseDate;
+    }
+
+    public void SetClassification(string? sector, string? marketCapCategory)
+    {
+        Sector = sector;
+        MarketCapCategory = marketCapCategory;
     }
 }

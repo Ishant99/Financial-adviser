@@ -17,5 +17,6 @@ async def simulate_goal_endpoint(req: GoalSimulationRequest) -> GoalSimulationRe
         debt_pct=req.debt_pct,
         gold_pct=req.gold_pct,
         cash_pct=req.cash_pct,
+        market_correlation=req.market_correlation,
     )
     return GoalSimulationResponse(**result)

@@ -17,6 +17,6 @@ public class AddSipPlanCommandHandler(ISipPlanRepository sipRepo)
         return new SipPlanDto(
             sip.Id, sip.FundName, sip.FundCode, sip.MonthlyAmount, sip.SipDate,
             sip.StartDate, sip.Status.ToString(), sip.LinkedGoalId, null,
-            sip.BenchmarkIndex, sip.LatestXirr, sip.XirrCalculatedAt);
+            sip.BenchmarkIndex, sip.LatestXirr, sip.XirrCalculatedAt, sip.BenchmarkXirr);
     }
 }

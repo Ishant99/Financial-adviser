@@ -22,7 +22,9 @@ export interface HoldingDto {
   currentValue: number;
   gainLossPercent: number;
   asOf: string;
-  purchaseDate?: string; // ISO date YYYY-MM-DD; null for legacy holdings
+  purchaseDate?: string;
+  sector?: string;
+  marketCapCategory?: string;
 }
 
 export interface AddHoldingRequest {
@@ -33,7 +35,9 @@ export interface AddHoldingRequest {
   purchaseNav: number;
   currentNav: number;
   asOf: string;
-  purchaseDate?: string; // ISO date YYYY-MM-DD
+  purchaseDate?: string;
+  sector?: string;
+  marketCapCategory?: string;
 }
 
 export interface UpdateHoldingRequest {
@@ -42,7 +46,9 @@ export interface UpdateHoldingRequest {
   purchaseNav: number;
   currentNav: number;
   asOf: string;
-  purchaseDate?: string; // ISO date YYYY-MM-DD
+  purchaseDate?: string;
+  sector?: string;
+  marketCapCategory?: string;
 }
 
 export interface AssetAllocationDto {
@@ -123,6 +129,7 @@ export interface SipPlanDto {
   benchmarkIndex: string;
   latestXirr?: number;
   xirrCalculatedAt?: string;
+  benchmarkXirr?: number;
 }
 
 export interface AddSipPlanRequest {
@@ -206,6 +213,15 @@ export interface HoldingAnalyticsDto {
   gainLossPercent: number;
   cagr?: number;
   holdingMonths: number;
+  sector?: string;
+  marketCapCategory?: string;
+}
+
+export interface AllocationByGroupDto {
+  label: string;
+  totalValue: number;
+  percentOfPortfolio: number;
+  holdingCount: number;
 }
 
 export interface AllocationByTypeDto {
@@ -230,6 +246,9 @@ export interface PortfolioAnalyticsDto {
   allocationByType: AllocationByTypeDto[];
   topConcentrations: ConcentrationRiskDto[];
   holdings: HoldingAnalyticsDto[];
+  allocationBySector: AllocationByGroupDto[];
+  allocationByMarketCap: AllocationByGroupDto[];
+  sharpeRatio?: number;
 }
 
 export interface CasImportResult {

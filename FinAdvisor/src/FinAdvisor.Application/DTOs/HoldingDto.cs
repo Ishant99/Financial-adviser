@@ -11,7 +11,9 @@ public record HoldingDto(
     decimal CurrentValue,
     decimal GainLossPercent,
     DateTimeOffset AsOf,
-    DateOnly? PurchaseDate);
+    DateOnly? PurchaseDate,
+    string? Sector,
+    string? MarketCapCategory);
 
 public record AddHoldingRequest(
     Guid AccountId,
@@ -21,7 +23,9 @@ public record AddHoldingRequest(
     decimal PurchaseNav,
     decimal CurrentNav,
     DateTimeOffset AsOf,
-    DateOnly? PurchaseDate);
+    DateOnly? PurchaseDate,
+    string? Sector = null,
+    string? MarketCapCategory = null);
 
 public record UpdateHoldingRequest(
     string Name,
@@ -29,4 +33,6 @@ public record UpdateHoldingRequest(
     decimal PurchaseNav,
     decimal CurrentNav,
     DateTimeOffset AsOf,
-    DateOnly? PurchaseDate);
+    DateOnly? PurchaseDate,
+    string? Sector = null,
+    string? MarketCapCategory = null);

@@ -10,6 +10,9 @@ class GoalSimulationRequest(BaseModel):
     debt_pct: float = Field(ge=0, le=100)
     gold_pct: float = Field(ge=0, le=100)
     cash_pct: float = Field(ge=0, le=100)
+    # Single market-factor correlation between asset classes (0 = independent, 1 = fully correlated).
+    # Default 0.3 is a pragmatic approximation for Indian multi-asset portfolios.
+    market_correlation: float = Field(default=0.3, ge=0.0, le=1.0)
 
 
 class GoalSimulationResponse(BaseModel):

@@ -15,15 +15,28 @@ public class RecalculateGoalProbabilityCommandHandler(
         if (goal is null) return null;
 
         var allSips = await sipPlans.GetActiveAsync(ct);
-        var monthlySip = allSips
-            .Where(s => s.LinkedGoalId == goalId)
-            .Sum(s => s.MonthlyAmount);
+        var goalSips = allSips.Where(s => s.LinkedGoalId == goalId).ToList();
+        var monthlySip = goalSips.Sum(s => s.MonthlyAmount);
 
-        // Approximate current allocated corpus: total portfolio / number of active goals
+        // Current corpus: sum the value of holdings whose name matches a fund
+        // linked to this goal via SIP. Falls back to equal-split across active
+        // goals only when no SIPs are linked (so every goal gets a fair share).
         var allHoldings = await holdings.GetAllAsync(ct);
-        var totalPortfolio = allHoldings.Sum(h => h.CurrentValue);
-        var activeGoalCount = (await goals.GetActiveAsync(ct)).Count;
-        var currentCorpus = activeGoalCount > 0 ? totalPortfolio / activeGoalCount : 0m;
+        decimal currentCorpus;
+        if (goalSips.Any())
+        {
+            var sipFundNames = new HashSet<string>(
+                goalSips.Select(s => s.FundName), StringComparer.OrdinalIgnoreCase);
+            currentCorpus = allHoldings
+                .Where(h => sipFundNames.Contains(h.Name))
+                .Sum(h => h.CurrentValue);
+        }
+        else
+        {
+            var totalPortfolio = allHoldings.Sum(h => h.CurrentValue);
+            var activeGoalCount = (await goals.GetActiveAsync(ct)).Count;
+            currentCorpus = activeGoalCount > 0 ? totalPortfolio / activeGoalCount : 0m;
+        }
 
         var yearsToGoal = (goal.TargetDate.ToDateTime(TimeOnly.MinValue) - DateTime.Today).TotalDays / 365.25;
         if (yearsToGoal <= 0) yearsToGoal = 0.083; // minimum 1 month

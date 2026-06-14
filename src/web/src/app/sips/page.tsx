@@ -31,18 +31,19 @@ import { ErrorState } from "@/components/ui/error-state";
 // XIRR health thresholds vs typical Nifty 500 long-run average (~12%)
 const BENCHMARK_XIRR = 0.12;
 
-function XirrHealthBadge({ xirr }: { xirr: number | undefined | null }) {
+function XirrHealthBadge({ xirr, benchmarkXirr }: { xirr: number | undefined | null; benchmarkXirr?: number | null }) {
   if (xirr == null) return <span className="text-gray-600 text-xs">—</span>;
 
+  const threshold = benchmarkXirr ?? BENCHMARK_XIRR;
   const pct = xirr * 100;
-  if (xirr >= BENCHMARK_XIRR * 0.9) {
+  if (xirr >= threshold * 0.9) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
         <TrendingUpIcon size={11} /> Good
       </span>
     );
   }
-  if (xirr >= BENCHMARK_XIRR * 0.6) {
+  if (xirr >= threshold * 0.6) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-yellow-400">
         <MinusIcon size={11} /> Review
@@ -249,9 +250,14 @@ export default function SipsPage() {
                     </TableCell>
                     <TableCell className={`text-right font-medium ${sip.latestXirr != null ? (sip.latestXirr >= 0 ? "text-emerald-400" : "text-red-400") : "text-gray-500"}`}>
                       {sip.latestXirr != null ? formatPercent(sip.latestXirr * 100) : "—"}
+                      {sip.benchmarkXirr != null && (
+                        <span className="ml-1 text-xs text-gray-500">
+                          vs {formatPercent(sip.benchmarkXirr * 100)} idx
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <XirrHealthBadge xirr={sip.latestXirr} />
+                      <XirrHealthBadge xirr={sip.latestXirr} benchmarkXirr={sip.benchmarkXirr} />
                     </TableCell>
                     <TableCell className="text-gray-400 max-w-[120px] truncate">
                       {sip.linkedGoalName ?? "—"}

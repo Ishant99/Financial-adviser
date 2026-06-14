@@ -28,7 +28,8 @@ public class ComputeSipXirrCommandHandler(
         if (cashFlows.Count < 2) return null;
 
         var result = await analytics.ComputeXirrAsync(new XirrRequest(cashFlows), ct);
-        sip.UpdateXirr(result.Xirr);
+        var benchmarkXirr = GetBenchmarkAnnualisedReturn(sip.BenchmarkIndex);
+        sip.UpdateXirr(result.Xirr, benchmarkXirr);
         await sipPlans.UpdateAsync(sip, ct);
 
         return ToDto(sip);
@@ -51,8 +52,24 @@ public class ComputeSipXirrCommandHandler(
         return flows;
     }
 
+    // Long-run annualised returns for common Indian benchmark indices (source: historical data).
+    // These are indicative; update periodically as the investment landscape changes.
+    private static decimal? GetBenchmarkAnnualisedReturn(string benchmarkIndex) =>
+        benchmarkIndex.ToUpperInvariant() switch
+        {
+            var b when b.Contains("NIFTY 50") || b.Contains("NIFTY50") => 0.12m,
+            var b when b.Contains("SENSEX") => 0.12m,
+            var b when b.Contains("MIDCAP") => 0.145m,
+            var b when b.Contains("SMALLCAP") => 0.15m,
+            var b when b.Contains("NIFTY 500") || b.Contains("NIFTY500") => 0.125m,
+            var b when b.Contains("LIQUID") || b.Contains("OVERNIGHT") => 0.065m,
+            var b when b.Contains("GILT") || b.Contains("G-SEC") => 0.075m,
+            var b when b.Contains("CORPORATE BOND") || b.Contains("CORP BOND") => 0.08m,
+            _ => null
+        };
+
     internal static SipPlanDto ToDto(Domain.Entities.SipPlan s) => new(
         s.Id, s.FundName, s.FundCode, s.MonthlyAmount, s.SipDate,
         s.StartDate, s.Status.ToString(), s.LinkedGoalId, null,
-        s.BenchmarkIndex, s.LatestXirr, s.XirrCalculatedAt);
+        s.BenchmarkIndex, s.LatestXirr, s.XirrCalculatedAt, s.BenchmarkXirr);
 }

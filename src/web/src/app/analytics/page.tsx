@@ -99,6 +99,12 @@ export default function AnalyticsPage() {
           valueClassName={data && data.totalGainLossPercent >= 0 ? "text-emerald-400" : "text-rose-400"}
           loading={isLoading}
         />
+        <StatTile
+          label="Sharpe Ratio"
+          value={data?.sharpeRatio != null ? data.sharpeRatio.toFixed(2) : "—"}
+          valueClassName={data?.sharpeRatio != null ? (data.sharpeRatio >= 1 ? "text-emerald-400" : data.sharpeRatio >= 0 ? "text-yellow-400" : "text-rose-400") : "text-gray-500"}
+          loading={isLoading}
+        />
       </div>
 
       {/* Asset Allocation — Recharts donut */}
@@ -191,6 +197,58 @@ export default function AnalyticsPage() {
             ))}
           </CardContent>
         </Card>
+      )}
+
+      {/* Sector / Market-cap breakdowns */}
+      {data && (data.allocationBySector.length > 0 || data.allocationByMarketCap.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {data.allocationBySector.length > 0 && (
+            <Card className="glass-hover">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-400">By Sector</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {data.allocationBySector.map((s) => (
+                  <div key={s.label} className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-300 truncate">{s.label}</span>
+                        <span className="text-gray-400 shrink-0 ml-2">{s.percentOfPortfolio.toFixed(1)}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                        <div className="h-full rounded-full bg-indigo-500 transition-all" style={{ width: `${Math.min(s.percentOfPortfolio, 100)}%` }} />
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-400 shrink-0">{formatCurrency(s.totalValue)}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          {data.allocationByMarketCap.length > 0 && (
+            <Card className="glass-hover">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-400">By Market Cap</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {data.allocationByMarketCap.map((m) => (
+                  <div key={m.label} className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-300 truncate">{m.label}</span>
+                        <span className="text-gray-400 shrink-0 ml-2">{m.percentOfPortfolio.toFixed(1)}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                        <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${Math.min(m.percentOfPortfolio, 100)}%` }} />
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-400 shrink-0">{formatCurrency(m.totalValue)}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Per-holding performance table with sort */}

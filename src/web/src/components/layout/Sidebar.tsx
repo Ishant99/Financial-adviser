@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   LayoutDashboardIcon, SparklesIcon, WalletIcon, TargetIcon, ArrowLeftRightIcon,
   LayersIcon, PieChartIcon, ReceiptIcon, LandmarkIcon, UploadIcon, SearchIcon,
+  SettingsIcon,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/transactions", label: "Transactions", icon: ReceiptIcon },
   { href: "/tax", label: "Tax", icon: LandmarkIcon },
   { href: "/upload", label: "Upload", icon: UploadIcon },
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function Sidebar() {
@@ -68,21 +70,23 @@ export function Sidebar() {
       {/* Search trigger */}
       <button
         onClick={openCommandPalette}
+        aria-label="Open command palette (Ctrl+K)"
         className="mx-1 mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors glass glass-hover"
       >
-        <SearchIcon size={13} />
+        <SearchIcon size={13} aria-hidden="true" />
         <span className="flex-1 text-left">Search…</span>
         <kbd className="text-[10px] text-gray-500 border border-white/10 rounded px-1 py-0.5">⌘K</kbd>
       </button>
 
       {/* Nav */}
-      <nav className="flex flex-col gap-0.5">
+      <nav aria-label="Main navigation" className="flex flex-col gap-0.5">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                 active
@@ -96,7 +100,7 @@ export function Sidebar() {
               {active && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-white" />
               )}
-              <Icon size={17} className="relative shrink-0" />
+              <Icon size={17} className="relative shrink-0" aria-hidden="true" />
               <span className="relative">{label}</span>
             </Link>
           );
@@ -108,6 +112,8 @@ export function Sidebar() {
         <button
           onClick={handleReset}
           disabled={resetting}
+          aria-label={confirming ? "Click again to confirm data reset" : "Reset all data"}
+          aria-busy={resetting}
           className={cn(
             "w-full rounded-xl px-3 py-2 text-xs font-medium transition-colors text-left",
             confirming

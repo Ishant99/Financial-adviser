@@ -12,7 +12,8 @@ public record SipPlanDto(
     string? LinkedGoalName,
     string BenchmarkIndex,
     decimal? LatestXirr,
-    DateTimeOffset? XirrCalculatedAt);
+    DateTimeOffset? XirrCalculatedAt,
+    decimal? BenchmarkXirr);
 
 public record AddSipPlanRequest(
     string FundName,

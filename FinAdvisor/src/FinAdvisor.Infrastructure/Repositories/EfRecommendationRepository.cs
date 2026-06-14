@@ -28,4 +28,11 @@ public class EfRecommendationRepository(AppDbContext db)
             .OrderByDescending(r => r.GeneratedAt)
             .Take(limit)
             .ToListAsync(ct);
+
+    public async Task<bool> ExistsTodayAsync(string title, CancellationToken ct = default)
+    {
+        var todayUtc = DateTimeOffset.UtcNow.Date;
+        return await Db.RecommendationLogs
+            .AnyAsync(r => r.Title == title && r.GeneratedAt.Date == todayUtc, ct);
+    }
 }

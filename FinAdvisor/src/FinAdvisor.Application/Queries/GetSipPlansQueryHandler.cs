@@ -16,6 +16,6 @@ public class GetSipPlansQueryHandler(ISipPlanRepository sipRepo, IGoalRepository
             s.StartDate, s.Status.ToString(),
             s.LinkedGoalId,
             s.LinkedGoalId.HasValue ? goalNames.GetValueOrDefault(s.LinkedGoalId.Value) : null,
-            s.BenchmarkIndex, s.LatestXirr, s.XirrCalculatedAt)).ToList();
+            s.BenchmarkIndex, s.LatestXirr, s.XirrCalculatedAt, s.BenchmarkXirr)).ToList();
     }
 }

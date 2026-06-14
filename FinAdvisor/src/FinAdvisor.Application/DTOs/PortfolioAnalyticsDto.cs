@@ -7,11 +7,19 @@ public record HoldingAnalyticsDto(
     decimal PurchasedValue,
     decimal GainLoss,
     decimal GainLossPercent,
-    decimal? Cagr,            // annualised; null when holding period < 1 month
-    int HoldingMonths);
+    decimal? Cagr,
+    int HoldingMonths,
+    string? Sector,
+    string? MarketCapCategory);
 
 public record AllocationByTypeDto(
     string HoldingType,
+    decimal TotalValue,
+    decimal PercentOfPortfolio,
+    int HoldingCount);
+
+public record AllocationByGroupDto(
+    string Label,
     decimal TotalValue,
     decimal PercentOfPortfolio,
     int HoldingCount);
@@ -29,4 +37,7 @@ public record PortfolioAnalyticsDto(
     decimal TotalGainLossPercent,
     IReadOnlyList<AllocationByTypeDto> AllocationByType,
     IReadOnlyList<ConcentrationRiskDto> TopConcentrations,
-    IReadOnlyList<HoldingAnalyticsDto> Holdings);
+    IReadOnlyList<HoldingAnalyticsDto> Holdings,
+    IReadOnlyList<AllocationByGroupDto> AllocationBySector,
+    IReadOnlyList<AllocationByGroupDto> AllocationByMarketCap,
+    decimal? SharpeRatio);

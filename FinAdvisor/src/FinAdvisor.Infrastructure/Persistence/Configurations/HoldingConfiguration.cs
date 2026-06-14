@@ -16,6 +16,8 @@ public class HoldingConfiguration : IEntityTypeConfiguration<Holding>
         builder.Property(h => h.CurrentNav).HasPrecision(18, 4);
         builder.Property(h => h.CurrentValue).HasPrecision(18, 2);
         builder.Property(h => h.PurchaseDate).IsRequired(false);
+        builder.Property(h => h.Sector).HasMaxLength(100).IsRequired(false);
+        builder.Property(h => h.MarketCapCategory).HasMaxLength(50).IsRequired(false);
 
         builder.HasIndex(h => h.AccountId);
     }

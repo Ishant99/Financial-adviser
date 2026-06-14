@@ -90,3 +90,63 @@ def test_api_simulate_goal_invalid_pct():
     }
     response = client.post("/simulation/simulate-goal", json=payload)
     assert response.status_code == 422
+
+
+# ── Correlation / new tests ───────────────────────────────────────────────────
+
+def test_correlation_zero_vs_one_p50_ordering():
+    """Higher correlation should not raise P50 (diversification benefit lost).
+    With seed fixed, both runs produce deterministic results.
+    We just verify the simulation still produces valid percentile ordering.
+    """
+    result_low = simulate_goal(
+        target_amount=5_000_000, years_to_goal=20, current_value=100_000,
+        monthly_contribution=5_000,
+        equity_pct=70, debt_pct=20, gold_pct=5, cash_pct=5,
+        market_correlation=0.0, seed=1,
+    )
+    result_high = simulate_goal(
+        target_amount=5_000_000, years_to_goal=20, current_value=100_000,
+        monthly_contribution=5_000,
+        equity_pct=70, debt_pct=20, gold_pct=5, cash_pct=5,
+        market_correlation=0.9, seed=1,
+    )
+    # Both must maintain percentile ordering
+    assert result_low["p10_corpus"] <= result_low["p50_corpus"] <= result_low["p90_corpus"]
+    assert result_high["p10_corpus"] <= result_high["p50_corpus"] <= result_high["p90_corpus"]
+
+
+def test_correlation_spread_wider_at_high_rho():
+    """Higher correlation → wider spread (P90-P10 larger) because diversification is gone."""
+    result_low = simulate_goal(
+        target_amount=5_000_000, years_to_goal=20, current_value=0,
+        monthly_contribution=10_000,
+        equity_pct=50, debt_pct=50, gold_pct=0, cash_pct=0,
+        market_correlation=0.0, seed=99,
+    )
+    result_high = simulate_goal(
+        target_amount=5_000_000, years_to_goal=20, current_value=0,
+        monthly_contribution=10_000,
+        equity_pct=50, debt_pct=50, gold_pct=0, cash_pct=0,
+        market_correlation=1.0, seed=99,
+    )
+    spread_low = result_low["p90_corpus"] - result_low["p10_corpus"]
+    spread_high = result_high["p90_corpus"] - result_high["p10_corpus"]
+    assert spread_high > spread_low
+
+
+def test_api_simulate_goal_with_correlation():
+    """API accepts market_correlation param and returns valid response."""
+    payload = {
+        "target_amount": 5_000_000,
+        "years_to_goal": 15,
+        "current_value": 200_000,
+        "monthly_contribution": 8_000,
+        "equity_pct": 60, "debt_pct": 30, "gold_pct": 5, "cash_pct": 5,
+        "market_correlation": 0.4,
+    }
+    response = client.post("/simulation/simulate-goal", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert 0 <= data["probability_of_success"] <= 100
+    assert data["p10_corpus"] <= data["p50_corpus"] <= data["p90_corpus"]

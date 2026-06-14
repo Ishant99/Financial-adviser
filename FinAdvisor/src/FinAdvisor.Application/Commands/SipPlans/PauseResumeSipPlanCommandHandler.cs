@@ -26,5 +26,5 @@ public class PauseResumeSipPlanCommandHandler(ISipPlanRepository sipRepo)
     private static SipPlanDto ToDto(Domain.Entities.SipPlan s) => new(
         s.Id, s.FundName, s.FundCode, s.MonthlyAmount, s.SipDate,
         s.StartDate, s.Status.ToString(), s.LinkedGoalId, null,
-        s.BenchmarkIndex, s.LatestXirr, s.XirrCalculatedAt);
+        s.BenchmarkIndex, s.LatestXirr, s.XirrCalculatedAt, s.BenchmarkXirr);
 }

@@ -42,6 +42,8 @@ const addSchema = z.object({
   currentNav: z.number().min(0, "Must be ≥ 0"),
   asOf: z.string().min(1, "Date is required"),
   purchaseDate: z.string().min(0),
+  sector: z.string().optional(),
+  marketCapCategory: z.string().optional(),
 });
 
 const editSchema = z.object({
@@ -51,6 +53,8 @@ const editSchema = z.object({
   currentNav: z.number().min(0, "Must be ≥ 0"),
   asOf: z.string().min(1, "Date is required"),
   purchaseDate: z.string().min(0),
+  sector: z.string().optional(),
+  marketCapCategory: z.string().optional(),
 });
 
 type AddValues = z.infer<typeof addSchema>;
@@ -88,6 +92,8 @@ function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
       await addHolding.mutateAsync({
         ...values,
         purchaseDate: values.purchaseDate || undefined,
+        sector: values.sector || undefined,
+        marketCapCategory: values.marketCapCategory || undefined,
       });
       toast.success("Holding added");
       reset();
@@ -141,6 +147,19 @@ function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
             <Input {...register("purchaseDate")} type="date" className="bg-gray-800 border-gray-700 text-gray-100" />
             <p className="text-xs text-gray-500 mt-0.5">Used for LTCG/STCG classification. Leave blank if unknown.</p>
           </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Sector (optional)" error={errors.sector?.message}>
+              <Input {...register("sector")} placeholder="e.g. Banking" className="bg-gray-800 border-gray-700 text-gray-100" />
+            </Field>
+            <Field label="Market Cap (optional)" error={errors.marketCapCategory?.message}>
+              <NativeSelect {...register("marketCapCategory")}>
+                <option value="">Select</option>
+                <option value="Large Cap">Large Cap</option>
+                <option value="Mid Cap">Mid Cap</option>
+                <option value="Small Cap">Small Cap</option>
+              </NativeSelect>
+            </Field>
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>Add Holding</Button>
@@ -161,7 +180,7 @@ function EditDialog({
   } = useForm<EditValues>({
     resolver: zodResolver(editSchema),
     values: holding
-      ? { name: holding.name, units: holding.units, purchaseNav: holding.purchaseNav, currentNav: holding.currentNav, asOf: holding.asOf.split("T")[0], purchaseDate: holding.purchaseDate ?? "" }
+      ? { name: holding.name, units: holding.units, purchaseNav: holding.purchaseNav, currentNav: holding.currentNav, asOf: holding.asOf.split("T")[0], purchaseDate: holding.purchaseDate ?? "", sector: holding.sector ?? "", marketCapCategory: holding.marketCapCategory ?? "" }
       : undefined,
   });
 
@@ -170,7 +189,7 @@ function EditDialog({
     try {
       await updateHolding.mutateAsync({
         id: holding.id,
-        req: { ...values, purchaseDate: values.purchaseDate || undefined },
+        req: { ...values, purchaseDate: values.purchaseDate || undefined, sector: values.sector || undefined, marketCapCategory: values.marketCapCategory || undefined },
       });
       toast.success("Holding updated");
       onOpenChange(false);
@@ -209,6 +228,19 @@ function EditDialog({
             <Input {...register("purchaseDate")} type="date" className="bg-gray-800 border-gray-700 text-gray-100" />
             <p className="text-xs text-gray-500 mt-0.5">Used for LTCG/STCG classification. Leave blank if unknown.</p>
           </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Sector (optional)" error={errors.sector?.message}>
+              <Input {...register("sector")} placeholder="e.g. Banking" className="bg-gray-800 border-gray-700 text-gray-100" />
+            </Field>
+            <Field label="Market Cap (optional)" error={errors.marketCapCategory?.message}>
+              <NativeSelect {...register("marketCapCategory")}>
+                <option value="">Select</option>
+                <option value="Large Cap">Large Cap</option>
+                <option value="Mid Cap">Mid Cap</option>
+                <option value="Small Cap">Small Cap</option>
+              </NativeSelect>
+            </Field>
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>Save</Button>

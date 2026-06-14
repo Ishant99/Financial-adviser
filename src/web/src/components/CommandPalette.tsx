@@ -15,6 +15,7 @@ const ROUTES = [
   { href: "/transactions", label: "Transactions", keywords: "credit debit transaction" },
   { href: "/tax", label: "Tax Summary", keywords: "ltcg stcg 80c capital gains" },
   { href: "/upload", label: "Upload CAS", keywords: "import cas cams karvy pdf" },
+  { href: "/settings", label: "Settings", keywords: "theme currency locale reset preferences" },
 ];
 
 export function CommandPalette() {
@@ -56,9 +57,14 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4">
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
+      <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} aria-hidden="true" />
 
       {/* Palette */}
       <div className="relative w-full max-w-lg glass-strong rounded-2xl shadow-2xl overflow-hidden">

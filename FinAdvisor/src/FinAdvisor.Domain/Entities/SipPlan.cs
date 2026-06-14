@@ -14,9 +14,12 @@ public class SipPlan
     public Guid? LinkedGoalId { get; private set; }
     public string BenchmarkIndex { get; private set; } = string.Empty;
 
-    // Populated by Hangfire job (Sprint 5)
+    // Populated by XIRR background service
     public decimal? LatestXirr { get; private set; }
     public DateTimeOffset? XirrCalculatedAt { get; private set; }
+
+    // Annualised return of the benchmark index (set alongside LatestXirr for comparison)
+    public decimal? BenchmarkXirr { get; private set; }
 
     public Goal? LinkedGoal { get; private set; }
 
@@ -55,10 +58,12 @@ public class SipPlan
     public void Resume() => Status = SipStatus.Active;
     public void Stop() => Status = SipStatus.Stopped;
 
-    public void UpdateXirr(decimal xirr)
+    public void UpdateXirr(decimal xirr, decimal? benchmarkXirr = null)
     {
         LatestXirr = xirr;
         XirrCalculatedAt = DateTimeOffset.UtcNow;
+        if (benchmarkXirr.HasValue)
+            BenchmarkXirr = benchmarkXirr;
     }
 
     public void UpdateMonthlyAmount(decimal newAmount)

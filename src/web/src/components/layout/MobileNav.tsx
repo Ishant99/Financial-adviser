@@ -19,6 +19,7 @@ const navItems = [
   { href: "/transactions", label: "Transactions" },
   { href: "/tax", label: "Tax" },
   { href: "/upload", label: "Upload" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export function MobileNav() {
@@ -74,7 +75,7 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
           />
           {/* Drawer */}
-          <nav className="md:hidden fixed top-0 left-0 bottom-0 z-50 w-64 glass-strong border-r border-white/[0.08] flex flex-col px-3 py-6 overflow-y-auto">
+          <nav aria-label="Main navigation" className="md:hidden fixed top-0 left-0 bottom-0 z-50 w-64 glass-strong border-r border-white/[0.08] flex flex-col px-3 py-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6 px-3">
               <span className="text-lg font-bold text-white tracking-tight">FinAdvisor</span>
               <button
@@ -90,6 +91,7 @@ export function MobileNav() {
                   key={href}
                   href={href}
                   onClick={() => setOpen(false)}
+                  aria-current={pathname === href ? "page" : undefined}
                   className={cn(
                     "rounded-xl px-3 py-3 text-sm font-medium transition-colors",
                     pathname === href

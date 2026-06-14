@@ -52,6 +52,10 @@ public class GenerateRecommendationsCommandHandler(
         var saved = new List<RecommendationLog>();
         foreach (var g in generated)
         {
+            // Skip if a recommendation with this title was already generated today.
+            if (await recommendations.ExistsTodayAsync(g.Title, ct))
+                continue;
+
             if (!Enum.TryParse<RecommendationType>(g.Type, out var type))
                 type = RecommendationType.Watch;
             if (!Enum.TryParse<RecommendationSeverity>(g.Severity, out var severity))

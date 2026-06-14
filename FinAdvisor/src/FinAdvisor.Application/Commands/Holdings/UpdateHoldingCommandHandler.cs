@@ -13,6 +13,7 @@ public class UpdateHoldingCommandHandler(IHoldingRepository holdingRepo)
         holding.UpdateNav(req.CurrentNav, req.AsOf);
         if (req.PurchaseDate.HasValue)
             holding.SetPurchaseDate(req.PurchaseDate.Value);
+        holding.SetClassification(req.Sector, req.MarketCapCategory);
         await holdingRepo.UpdateAsync(holding, ct);
 
         return new HoldingDto(
@@ -21,6 +22,6 @@ public class UpdateHoldingCommandHandler(IHoldingRepository holdingRepo)
             holding.CurrentValue,
             holding.PurchaseNav == 0 ? 0m
                 : Math.Round((holding.CurrentNav - holding.PurchaseNav) / holding.PurchaseNav * 100m, 2),
-            holding.AsOf, holding.PurchaseDate);
+            holding.AsOf, holding.PurchaseDate, holding.Sector, holding.MarketCapCategory);
     }
 }
