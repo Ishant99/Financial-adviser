@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
       {isError && <ErrorState message="Failed to load analytics" onRetry={() => refetch()} />}
 
       {/* Top summary row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 stagger">
         <StatTile label="Portfolio Value" value={formatCurrency(data?.totalValue ?? 0)} loading={isLoading} />
         <StatTile label="Total Invested" value={formatCurrency(data?.totalPurchasedValue ?? 0)} valueClassName="text-gray-300" loading={isLoading} />
         <StatTile
