@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FinAdvisor.Api/FinAdvisor.Api.csproj" />
+    <Project Path="src/FinAdvisor.Application/FinAdvisor.Application.csproj" />
+    <Project Path="src/FinAdvisor.Domain/FinAdvisor.Domain.csproj" />
+    <Project Path="src/FinAdvisor.Infrastructure/FinAdvisor.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FinAdvisor.Api.Tests/FinAdvisor.Api.Tests.csproj" />
+    <Project Path="tests/FinAdvisor.Application.Tests/FinAdvisor.Application.Tests.csproj" />
+    <Project Path="tests/FinAdvisor.Domain.Tests/FinAdvisor.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,14 @@
+{
+  "name": "finadvisor-dev",
+  "private": true,
+  "version": "1.0.0",
+  "description": "One-command local dev launcher for FinAdvisor (API + analytics + web).",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names \"api,analytics,web\" --prefix-colors \"blue,magenta,green\" --prefix \"[{name}]\" \"dotnet run --project FinAdvisor/src/FinAdvisor.Api --launch-profile http\" \"python -m uvicorn app.main:app --app-dir src/analytics-service --host 0.0.0.0 --port 8000 --reload\" \"npm --prefix src/web run dev\"",
+    "db:up": "docker compose up -d postgres",
+    "db:stop": "docker compose stop postgres"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
