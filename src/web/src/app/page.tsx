@@ -13,7 +13,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Header */}
-      <div>
+      <div className="pb-5 border-b border-white/[0.07]">
         <p className="eyebrow text-indigo-400/80">{dateLabel}</p>
         <h1 className="text-2xl font-bold text-white tracking-tight mt-0.5">
           {greeting} <span className="gradient-accent">·</span> here&apos;s your money

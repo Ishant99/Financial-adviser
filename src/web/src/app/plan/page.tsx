@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { SparklesIcon } from "lucide-react";
@@ -87,7 +87,7 @@ export default function PlanPage() {
         <EmptyState
           icon={SparklesIcon}
           title="No plan generated yet"
-          description="Click Generate plan to create an AI-powered monthly financial plan based on your current month's data."
+          description={"Click Generate plan to create an AI-powered monthly financial plan based on your current month's data."}
         />
       ) : (
         <div className="space-y-3">
