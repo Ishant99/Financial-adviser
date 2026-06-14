@@ -11,6 +11,8 @@ public class UpdateHoldingCommandHandler(IHoldingRepository holdingRepo)
         if (holding is null) return null;
 
         holding.UpdateNav(req.CurrentNav, req.AsOf);
+        if (req.PurchaseDate.HasValue)
+            holding.SetPurchaseDate(req.PurchaseDate.Value);
         await holdingRepo.UpdateAsync(holding, ct);
 
         return new HoldingDto(
@@ -19,6 +21,6 @@ public class UpdateHoldingCommandHandler(IHoldingRepository holdingRepo)
             holding.CurrentValue,
             holding.PurchaseNav == 0 ? 0m
                 : Math.Round((holding.CurrentNav - holding.PurchaseNav) / holding.PurchaseNav * 100m, 2),
-            holding.AsOf);
+            holding.AsOf, holding.PurchaseDate);
     }
 }

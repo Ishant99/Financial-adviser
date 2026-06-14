@@ -41,6 +41,7 @@ const addSchema = z.object({
   purchaseNav: z.number().min(0, "Must be ≥ 0"),
   currentNav: z.number().min(0, "Must be ≥ 0"),
   asOf: z.string().min(1, "Date is required"),
+  purchaseDate: z.string().min(0),
 });
 
 const editSchema = z.object({
@@ -49,6 +50,7 @@ const editSchema = z.object({
   purchaseNav: z.number().min(0, "Must be ≥ 0"),
   currentNav: z.number().min(0, "Must be ≥ 0"),
   asOf: z.string().min(1, "Date is required"),
+  purchaseDate: z.string().min(0),
 });
 
 type AddValues = z.infer<typeof addSchema>;
@@ -83,7 +85,10 @@ function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
 
   const onSubmit = async (values: AddValues) => {
     try {
-      await addHolding.mutateAsync(values);
+      await addHolding.mutateAsync({
+        ...values,
+        purchaseDate: values.purchaseDate || undefined,
+      });
       toast.success("Holding added");
       reset();
       onOpenChange(false);
@@ -132,6 +137,10 @@ function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
               <Input {...register("currentNav", { valueAsNumber: true })} type="number" step="0.01" className="bg-gray-800 border-gray-700 text-gray-100" />
             </Field>
           </div>
+          <Field label="Purchase Date (for tax)" error={errors.purchaseDate?.message}>
+            <Input {...register("purchaseDate")} type="date" className="bg-gray-800 border-gray-700 text-gray-100" />
+            <p className="text-xs text-gray-500 mt-0.5">Used for LTCG/STCG classification. Leave blank if unknown.</p>
+          </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>Add Holding</Button>
@@ -152,14 +161,17 @@ function EditDialog({
   } = useForm<EditValues>({
     resolver: zodResolver(editSchema),
     values: holding
-      ? { name: holding.name, units: holding.units, purchaseNav: holding.purchaseNav, currentNav: holding.currentNav, asOf: holding.asOf.split("T")[0] }
+      ? { name: holding.name, units: holding.units, purchaseNav: holding.purchaseNav, currentNav: holding.currentNav, asOf: holding.asOf.split("T")[0], purchaseDate: holding.purchaseDate ?? "" }
       : undefined,
   });
 
   const onSubmit = async (values: EditValues) => {
     if (!holding) return;
     try {
-      await updateHolding.mutateAsync({ id: holding.id, req: values });
+      await updateHolding.mutateAsync({
+        id: holding.id,
+        req: { ...values, purchaseDate: values.purchaseDate || undefined },
+      });
       toast.success("Holding updated");
       onOpenChange(false);
     } catch {
@@ -193,6 +205,10 @@ function EditDialog({
               <Input {...register("currentNav", { valueAsNumber: true })} type="number" step="0.01" className="bg-gray-800 border-gray-700 text-gray-100" />
             </Field>
           </div>
+          <Field label="Purchase Date (for tax)" error={errors.purchaseDate?.message}>
+            <Input {...register("purchaseDate")} type="date" className="bg-gray-800 border-gray-700 text-gray-100" />
+            <p className="text-xs text-gray-500 mt-0.5">Used for LTCG/STCG classification. Leave blank if unknown.</p>
+          </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>Save</Button>

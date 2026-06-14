@@ -13,6 +13,9 @@ public class Holding
     public decimal CurrentNav { get; private set; }
     public decimal CurrentValue { get; private set; }
     public DateTimeOffset AsOf { get; private set; }
+    // Actual purchase date used for LTCG/STCG classification.
+    // Nullable for backwards-compatibility with holdings created before this field existed.
+    public DateOnly? PurchaseDate { get; private set; }
 
     public Account Account { get; private set; } = null!;
 
@@ -25,7 +28,8 @@ public class Holding
         decimal units,
         decimal purchaseNav,
         decimal currentNav,
-        DateTimeOffset asOf)
+        DateTimeOffset asOf,
+        DateOnly? purchaseDate = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (units < 0) throw new ArgumentException("Units cannot be negative.", nameof(units));
@@ -42,7 +46,8 @@ public class Holding
             PurchaseNav = purchaseNav,
             CurrentNav = currentNav,
             CurrentValue = units * currentNav,
-            AsOf = asOf
+            AsOf = asOf,
+            PurchaseDate = purchaseDate
         };
     }
 
@@ -54,7 +59,7 @@ public class Holding
         AsOf = asOf;
     }
 
-    public void UpdateFromCas(decimal units, decimal nav, DateTimeOffset asOf)
+    public void UpdateFromCas(decimal units, decimal nav, DateTimeOffset asOf, DateOnly? purchaseDate = null)
     {
         if (units < 0) throw new ArgumentException("Units cannot be negative.", nameof(units));
         if (nav < 0) throw new ArgumentException("NAV cannot be negative.", nameof(nav));
@@ -62,5 +67,13 @@ public class Holding
         CurrentNav = nav;
         CurrentValue = units * nav;
         AsOf = asOf;
+        // Only overwrite PurchaseDate if the CAS statement provides one and we don't already have it.
+        if (purchaseDate.HasValue && !PurchaseDate.HasValue)
+            PurchaseDate = purchaseDate;
+    }
+
+    public void SetPurchaseDate(DateOnly purchaseDate)
+    {
+        PurchaseDate = purchaseDate;
     }
 }

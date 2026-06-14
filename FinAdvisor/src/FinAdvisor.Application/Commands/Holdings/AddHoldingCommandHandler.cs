@@ -14,7 +14,7 @@ public class AddHoldingCommandHandler(IHoldingRepository holdingRepo)
 
         var holding = Holding.Create(
             req.AccountId, holdingType, req.Name,
-            req.Units, req.PurchaseNav, req.CurrentNav, req.AsOf);
+            req.Units, req.PurchaseNav, req.CurrentNav, req.AsOf, req.PurchaseDate);
 
         await holdingRepo.AddAsync(holding, ct);
 
@@ -24,6 +24,6 @@ public class AddHoldingCommandHandler(IHoldingRepository holdingRepo)
             holding.CurrentValue,
             holding.PurchaseNav == 0 ? 0m
                 : Math.Round((holding.CurrentNav - holding.PurchaseNav) / holding.PurchaseNav * 100m, 2),
-            holding.AsOf);
+            holding.AsOf, holding.PurchaseDate);
     }
 }

@@ -8,12 +8,15 @@ public class GetTaxSummaryQueryHandler(
     IHoldingRepository holdingRepo,
     ISipPlanRepository sipPlanRepo)
 {
-    // Indian LTCG: equity funds held > 12 months, 10% above ₹1 lakh exemption
-    // Indian STCG: equity funds held ≤ 12 months, 15%
-    // Section 80C ELSS deduction limit: ₹1,50,000 per year
-    private const decimal LtcgExemptionLimit = 100_000m;
-    private const decimal LtcgRate = 0.10m;
-    private const decimal StcgRate = 0.15m;
+    // Indian equity fund tax rules effective 23 July 2024 (Finance Act 2024).
+    // LTCG: gains on equity/equity-oriented funds held > 12 months, 12.5% above Rs 1.25 lakh exemption.
+    // STCG: gains on equity/equity-oriented funds held <= 12 months, flat 20%.
+    // Debt funds (held any period): taxed at income slab rate — classified separately.
+    // Section 80C ELSS SIP deduction limit unchanged at Rs 1,50,000/year.
+    // Source: CBDT circular dated 23-Jul-2024; applies from FY 2024-25 onwards.
+    private const decimal LtcgExemptionLimit = 125_000m;  // Rs 1.25L (was Rs 1L pre Jul-2024)
+    private const decimal LtcgRate = 0.125m;              // 12.5% (was 10% pre Jul-2024)
+    private const decimal StcgRate = 0.20m;               // 20%   (was 15% pre Jul-2024)
     private const decimal Section80CLimit = 150_000m;
 
     public async Task<TaxSummaryDto> HandleAsync(CancellationToken ct = default)
@@ -46,9 +49,9 @@ public class GetTaxSummaryQueryHandler(
         }
         var totalInvestedSection80C = Math.Min(grossSection80C, Section80CLimit);
 
-        // Holdings tax analysis
-        // Uses AsOf date as the acquisition-date proxy.
-        // In production, per-transaction purchase dates would be used instead.
+        // Holdings tax analysis.
+        // Uses PurchaseDate when available (set from CAS transaction history or manual entry).
+        // Falls back to AsOf (NAV update date) only for legacy holdings that pre-date the field.
         decimal ltcgGains = 0m;
         decimal stcgGains = 0m;
         var taxHoldings = new List<TaxHoldingDto>();
@@ -60,9 +63,10 @@ public class GetTaxSummaryQueryHandler(
                 continue;
 
             var gainLoss = (h.CurrentNav - h.PurchaseNav) * h.Units;
-            var asOfDate = DateOnly.FromDateTime(h.AsOf.LocalDateTime);
+            // Prefer explicit purchase date; fall back to AsOf for legacy rows.
+            var acquisitionDate = h.PurchaseDate ?? DateOnly.FromDateTime(h.AsOf.LocalDateTime);
             var holdingMonths = Math.Max(0,
-                (today.Year - asOfDate.Year) * 12 + today.Month - asOfDate.Month);
+                (today.Year - acquisitionDate.Year) * 12 + today.Month - acquisitionDate.Month);
 
             string taxCategory;
             if (h.HoldingType == HoldingType.FD)
@@ -83,7 +87,7 @@ public class GetTaxSummaryQueryHandler(
 
             taxHoldings.Add(new TaxHoldingDto(
                 h.Name,
-                asOfDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                acquisitionDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
                 h.CurrentValue,
                 Math.Round(gainLoss, 2),
                 holdingMonths,

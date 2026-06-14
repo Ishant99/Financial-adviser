@@ -15,6 +15,7 @@ public class HoldingConfiguration : IEntityTypeConfiguration<Holding>
         builder.Property(h => h.PurchaseNav).HasPrecision(18, 4);
         builder.Property(h => h.CurrentNav).HasPrecision(18, 4);
         builder.Property(h => h.CurrentValue).HasPrecision(18, 2);
+        builder.Property(h => h.PurchaseDate).IsRequired(false);
 
         builder.HasIndex(h => h.AccountId);
     }

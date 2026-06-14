@@ -22,6 +22,7 @@ export interface HoldingDto {
   currentValue: number;
   gainLossPercent: number;
   asOf: string;
+  purchaseDate?: string; // ISO date YYYY-MM-DD; null for legacy holdings
 }
 
 export interface AddHoldingRequest {
@@ -32,6 +33,7 @@ export interface AddHoldingRequest {
   purchaseNav: number;
   currentNav: number;
   asOf: string;
+  purchaseDate?: string; // ISO date YYYY-MM-DD
 }
 
 export interface UpdateHoldingRequest {
@@ -40,6 +42,7 @@ export interface UpdateHoldingRequest {
   purchaseNav: number;
   currentNav: number;
   asOf: string;
+  purchaseDate?: string; // ISO date YYYY-MM-DD
 }
 
 export interface AssetAllocationDto {

@@ -50,7 +50,8 @@ public class AnalyticsServiceClient(HttpClient http, ILogger<AnalyticsServiceCli
             result.StatementDate,
             result.TotalValue,
             result.Holdings.Select(h => new CasHoldingResult(
-                h.FundName, h.FundCode, h.Units, h.Nav, h.Value, h.Folio, h.Isin)).ToList());
+                h.FundName, h.FundCode, h.Units, h.Nav, h.Value, h.Folio, h.Isin,
+                h.EarliestPurchaseDate)).ToList());
     }
 
     public async Task<MonthlyPlanResponse> GenerateMonthlyPlanAsync(
@@ -177,7 +178,8 @@ public class AnalyticsServiceClient(HttpClient http, ILogger<AnalyticsServiceCli
         decimal nav,
         decimal value,
         string folio,
-        string? isin)
+        string? isin,
+        string? earliest_purchase_date)
     {
         public string FundName => fund_name;
         public string FundCode => fund_code;
@@ -186,6 +188,7 @@ public class AnalyticsServiceClient(HttpClient http, ILogger<AnalyticsServiceCli
         public decimal Value => value;
         public string Folio => folio;
         public string? Isin => isin;
+        public string? EarliestPurchaseDate => earliest_purchase_date;
     }
 
     private sealed record PythonPlanSection(string title, decimal? amount, string narrative);

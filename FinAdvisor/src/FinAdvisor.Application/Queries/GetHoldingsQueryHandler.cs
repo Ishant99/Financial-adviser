@@ -20,6 +20,7 @@ public class GetHoldingsQueryHandler(IHoldingRepository holdingRepo)
             h.CurrentValue,
             h.PurchaseNav == 0 ? 0m
                 : Math.Round((h.CurrentNav - h.PurchaseNav) / h.PurchaseNav * 100m, 2),
-            h.AsOf)).ToList();
+            h.AsOf,
+            h.PurchaseDate)).ToList();
     }
 }

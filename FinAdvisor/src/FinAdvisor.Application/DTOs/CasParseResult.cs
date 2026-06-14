@@ -13,4 +13,6 @@ public record CasHoldingResult(
     decimal Nav,
     decimal Value,
     string Folio,
-    string? Isin);
+    string? Isin,
+    // ISO date string from the CAS transaction history; null when not available.
+    string? EarliestPurchaseDate);

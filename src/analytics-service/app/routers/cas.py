@@ -58,6 +58,25 @@ async def parse_cas(
             nav_val = float(valuation.get("nav") or scheme.get("nav") or 0)
             isin = scheme.get("isin") or None
 
+            # Walk transactions to find the earliest purchase date.
+            # casparser exposes transactions as a list under scheme["transactions"];
+            # each entry has a "date" (datetime or date str) and "transaction_type".
+            earliest_purchase_date: str | None = None
+            try:
+                for txn in scheme.get("transactions") or []:
+                    txn_type = str(txn.get("transaction_type") or "").lower()
+                    # Only consider inflow transactions (purchases/SIP/NFO etc.)
+                    if "purchase" not in txn_type and "sip" not in txn_type and "nfo" not in txn_type:
+                        continue
+                    raw_date = txn.get("date")
+                    if not raw_date:
+                        continue
+                    date_str = str(raw_date)[:10]  # keep YYYY-MM-DD portion
+                    if earliest_purchase_date is None or date_str < earliest_purchase_date:
+                        earliest_purchase_date = date_str
+            except Exception:
+                pass  # non-critical; silently skip if transaction data is malformed
+
             holdings.append(
                 CasHolding(
                     fund_name=scheme.get("scheme") or "",
@@ -67,6 +86,7 @@ async def parse_cas(
                     value=current_value,
                     folio=folio_number,
                     isin=isin,
+                    earliest_purchase_date=earliest_purchase_date,
                 )
             )
 

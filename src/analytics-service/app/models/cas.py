@@ -9,6 +9,9 @@ class CasHolding(BaseModel):
     value: float
     folio: str
     isin: str | None = None
+    # ISO date (YYYY-MM-DD) of the earliest purchase transaction found in the CAS statement.
+    # Null when the statement does not include transaction history for this fund.
+    earliest_purchase_date: str | None = None
 
 
 class CasParseResponse(BaseModel):

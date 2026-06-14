@@ -23,9 +23,18 @@ public class ImportCasHoldingsCommandHandler(
 
         foreach (var ch in cas.Holdings)
         {
+            DateOnly? purchaseDate = null;
+            if (ch.EarliestPurchaseDate is not null
+                && DateOnly.TryParseExact(ch.EarliestPurchaseDate, "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var pd))
+            {
+                purchaseDate = pd;
+            }
+
             if (existingByName.TryGetValue(ch.FundName, out var existingHolding))
             {
-                existingHolding.UpdateFromCas(ch.Units, ch.Nav, DateTimeOffset.UtcNow);
+                existingHolding.UpdateFromCas(ch.Units, ch.Nav, DateTimeOffset.UtcNow, purchaseDate);
                 await holdings.UpdateAsync(existingHolding);
                 updated++;
             }
@@ -38,7 +47,8 @@ public class ImportCasHoldingsCommandHandler(
                     ch.Units,
                     ch.Nav,
                     ch.Nav,
-                    DateTimeOffset.UtcNow);
+                    DateTimeOffset.UtcNow,
+                    purchaseDate);
                 await holdings.AddAsync(newHolding);
                 imported++;
             }

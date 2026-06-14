@@ -10,7 +10,8 @@ public record HoldingDto(
     decimal CurrentNav,
     decimal CurrentValue,
     decimal GainLossPercent,
-    DateTimeOffset AsOf);
+    DateTimeOffset AsOf,
+    DateOnly? PurchaseDate);
 
 public record AddHoldingRequest(
     Guid AccountId,
@@ -19,11 +20,13 @@ public record AddHoldingRequest(
     decimal Units,
     decimal PurchaseNav,
     decimal CurrentNav,
-    DateTimeOffset AsOf);
+    DateTimeOffset AsOf,
+    DateOnly? PurchaseDate);
 
 public record UpdateHoldingRequest(
     string Name,
     decimal Units,
     decimal PurchaseNav,
     decimal CurrentNav,
-    DateTimeOffset AsOf);
+    DateTimeOffset AsOf,
+    DateOnly? PurchaseDate);
