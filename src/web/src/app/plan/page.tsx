@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { MonthlyPlanResponse } from "@/types/api";
 
 function PlanResult({ plan }: { plan: MonthlyPlanResponse }) {
@@ -83,13 +84,11 @@ export default function PlanPage() {
       {plan ? (
         <PlanResult plan={plan} />
       ) : !generate.isPending ? (
-        <div className="rounded-2xl glass p-12 text-center">
-          <p className="text-gray-400 mb-2">No plan generated yet.</p>
-          <p className="text-sm text-gray-600">
-            Click &quot;Generate plan&quot; to create an AI-powered monthly financial plan
-            based on your current month&apos;s data.
-          </p>
-        </div>
+        <EmptyState
+          icon={SparklesIcon}
+          title="No plan generated yet"
+          description="Click Generate plan to create an AI-powered monthly financial plan based on your current month's data."
+        />
       ) : (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
