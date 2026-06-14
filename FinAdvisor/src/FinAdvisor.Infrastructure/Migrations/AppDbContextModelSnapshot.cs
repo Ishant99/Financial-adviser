@@ -178,12 +178,20 @@ namespace FinAdvisor.Infrastructure.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("MarketCapCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateOnly?>("PurchaseDate")
                         .HasColumnType("date");
 
                     b.Property<decimal>("PurchaseNav")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Sector")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<decimal>("Units")
                         .HasPrecision(18, 6)
@@ -255,6 +263,10 @@ namespace FinAdvisor.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<decimal?>("BenchmarkXirr")
+                        .HasPrecision(8, 6)
+                        .HasColumnType("numeric(8,6)");
 
                     b.Property<string>("FundCode")
                         .IsRequired()

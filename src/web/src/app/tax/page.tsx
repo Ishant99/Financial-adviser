@@ -62,14 +62,14 @@ export default function TaxPage() {
         <StatCard
           label="Est. LTCG Tax"
           value={formatCurrency(tax?.estimatedLtcgTax ?? 0)}
-          sub={ltcgTaxable > 0 ? `10% on ${formatCurrency(ltcgTaxable)} above ₹1L` : "Within ₹1L exemption"}
+          sub={ltcgTaxable > 0 ? `12.5% on ${formatCurrency(ltcgTaxable)} above ₹1.25L` : "Within ₹1.25L exemption"}
           color={tax && tax.estimatedLtcgTax > 0 ? "text-amber-400" : "text-gray-400"}
           loading={isLoading}
         />
         <StatCard
           label="Est. STCG Tax"
           value={formatCurrency(tax?.estimatedStcgTax ?? 0)}
-          sub="Flat 15%"
+          sub="Flat 20%"
           color={tax && tax.estimatedStcgTax > 0 ? "text-amber-400" : "text-gray-400"}
           loading={isLoading}
         />
@@ -96,9 +96,9 @@ export default function TaxPage() {
       {!isLoading && (
         <div className="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-xs text-gray-500 leading-relaxed">
           <strong className="text-gray-400">Disclaimer:</strong> These are estimates only. LTCG on equity mutual
-          funds is taxed at 10% on gains exceeding ₹1 lakh per year. STCG is taxed at 15%. FD interest is taxed
-          at your income slab rate. Consult a tax professional for precise calculations. Holding period is based
-          on the last NAV update date as a proxy.
+          funds is taxed at 12.5% on gains exceeding ₹1.25 lakh per year (Finance Act 2024, effective 23 Jul 2024).
+          STCG is taxed at 20%. FD interest is taxed at your income slab rate. Consult a tax professional for
+          precise calculations. Holding period uses purchase date where available, otherwise last NAV update date.
         </div>
       )}
 
