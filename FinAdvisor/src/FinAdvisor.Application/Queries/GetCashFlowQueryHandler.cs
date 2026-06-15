@@ -6,6 +6,14 @@ namespace FinAdvisor.Application.Queries;
 
 public class GetCashFlowQueryHandler(ITransactionRepository transactionRepo)
 {
+    // Categories that represent money MOVED, not income earned or money spent:
+    // - "Investment": SIP/MF/broker debits build wealth, they aren't an expense.
+    // - "Transfer":   self/person/bank transfers (P2A, NEFT, RTGS, IMPS) move money between
+    //                 accounts; counting them would double-count and distort surplus.
+    // These are excluded from income/expense totals but still appear in the category breakdown.
+    private static readonly HashSet<string> NonCashFlowCategories =
+        new(StringComparer.OrdinalIgnoreCase) { "Investment", "Transfer" };
+
     public async Task<IReadOnlyList<CashFlowMonthDto>> HandleAsync(int months = 6, CancellationToken ct = default)
     {
         months = Math.Clamp(months, 1, 24);
@@ -28,8 +36,10 @@ public class GetCashFlowQueryHandler(ITransactionRepository transactionRepo)
             var key = (date.Year, date.Month);
             var txs = byMonth.TryGetValue(key, out var list) ? list : [];
 
-            var income   = txs.Where(t => t.TransactionType == TransactionType.Credit).Sum(t => t.Amount);
-            var expenses = txs.Where(t => t.TransactionType == TransactionType.Debit).Sum(t => t.Amount);
+            var income   = txs.Where(t => t.TransactionType == TransactionType.Credit
+                                          && !NonCashFlowCategories.Contains(t.Category)).Sum(t => t.Amount);
+            var expenses = txs.Where(t => t.TransactionType == TransactionType.Debit
+                                          && !NonCashFlowCategories.Contains(t.Category)).Sum(t => t.Amount);
 
             var categories = txs
                 .GroupBy(t => new { t.Category, Type = t.TransactionType.ToString() })
