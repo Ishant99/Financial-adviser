@@ -105,17 +105,26 @@ public class GetTaxSummaryQueryHandlerTests : IDisposable
     }
 
     /// <summary>
-    /// PurchaseDate = null → falls back to AsOf. AsOf 2 years ago → classified LTCG.
+    /// PurchaseDate = null → classified "Unknown" and EXCLUDED from tax totals.
+    /// We must NOT fall back to AsOf (the NAV/import date): broker exports like Groww
+    /// omit the buy date, and using the import date would wrongly tax everything as STCG.
+    /// The holding still appears in the list (so the user can spot it and set a date),
+    /// but contributes nothing to LtcgGains/StcgGains.
     /// </summary>
     [Fact]
-    public async Task FallbackToAsOf_WhenPurchaseDateNull_ClassifiesAsLtcg()
+    public async Task PurchaseDateNull_ClassifiedUnknown_AndExcludedFromTotals()
     {
+        // asOf 2 years ago — the OLD buggy code would have called this LTCG.
         AddHolding(HoldingType.MutualFund, units: 100m, purchaseNav: 50m, currentNav: 150m,
             purchaseDate: null, asOf: DateTimeOffset.UtcNow.AddYears(-2));
 
         var result = await _handler.HandleAsync();
 
-        result.Holdings.Single().TaxCategory.Should().Be("LTCG");
+        result.Holdings.Single().TaxCategory.Should().Be("Unknown");
+        result.LtcgGains.Should().Be(0m);
+        result.StcgGains.Should().Be(0m);
+        result.EstimatedLtcgTax.Should().Be(0m);
+        result.EstimatedStcgTax.Should().Be(0m);
     }
 
     /// <summary>Cash holdings are excluded entirely from tax calculations.</summary>

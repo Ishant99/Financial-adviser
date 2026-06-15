@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ import {
 import {
   useHoldings, useAddHolding, useUpdateHolding, useDeleteHolding,
 } from "@/lib/queries/useHoldings";
-import { useAccounts } from "@/lib/queries/useAccounts";
+import { AccountSelect } from "@/components/ui/account-select";
 import { formatCurrency, formatPercent, formatDate } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { Segmented } from "@/components/ui/segmented";
@@ -80,10 +80,9 @@ function NativeSelect({ className, ...props }: React.ComponentProps<"select">) {
 }
 
 function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const { data: accounts = [] } = useAccounts();
   const addHolding = useAddHolding();
   const {
-    register, handleSubmit, reset,
+    register, handleSubmit, reset, control,
     formState: { errors, isSubmitting },
   } = useForm<AddValues>({ resolver: zodResolver(addSchema) });
 
@@ -110,14 +109,14 @@ function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
           <DialogTitle className="text-white">Add Holding</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-          <Field label="Account" error={errors.accountId?.message}>
-            <NativeSelect {...register("accountId")}>
-              <option value="">Select account</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </NativeSelect>
-          </Field>
+          <Controller
+            control={control}
+            name="accountId"
+            render={({ field }) => (
+              <AccountSelect value={field.value ?? ""} onChange={field.onChange} />
+            )}
+          />
+          {errors.accountId && <p className="text-xs text-red-400">{errors.accountId.message}</p>}
           <Field label="Type" error={errors.holdingType?.message}>
             <NativeSelect {...register("holdingType")}>
               <option value="">Select type</option>

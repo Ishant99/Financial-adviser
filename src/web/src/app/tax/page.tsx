@@ -1,6 +1,7 @@
 "use client";
 
-import { LandmarkIcon } from "lucide-react";
+import Link from "next/link";
+import { LandmarkIcon, AlertTriangleIcon } from "lucide-react";
 import { useTaxSummary } from "@/lib/queries/useTax";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ const TAX_CATEGORY_STYLES: Record<string, string> = {
   LTCG: "border-indigo-500/30 text-indigo-300 bg-indigo-500/10",
   STCG: "border-amber-500/30 text-amber-300 bg-amber-500/10",
   Slab: "border-white/10 text-gray-400 bg-white/[0.04]",
+  Unknown: "border-rose-500/30 text-rose-300 bg-rose-500/10",
 };
 
 function StatCard({
@@ -31,7 +33,8 @@ function StatCard({
 export default function TaxPage() {
   const { data: tax, isLoading, isError, refetch } = useTaxSummary();
 
-  const ltcgTaxable = tax ? Math.max(0, tax.ltcgGains - 100_000) : 0;
+  const ltcgTaxable = tax ? Math.max(0, tax.ltcgGains - 125_000) : 0;
+  const unknownCount = tax?.holdings.filter((h) => h.taxCategory === "Unknown").length ?? 0;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -92,13 +95,34 @@ export default function TaxPage() {
         />
       </div>
 
+      {/* Unknown purchase-date warning */}
+      {!isLoading && unknownCount > 0 && (
+        <div className="rounded-lg border border-rose-800/60 bg-rose-950/30 px-4 py-3 flex items-start gap-3">
+          <AlertTriangleIcon size={18} className="text-rose-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-rose-200 leading-relaxed">
+            <p className="font-medium">
+              {unknownCount} holding{unknownCount !== 1 ? "s" : ""} {unknownCount !== 1 ? "have" : "has"} no purchase date.
+            </p>
+            <p className="text-rose-300/80 text-xs mt-1">
+              These are excluded from the LTCG/STCG estimate above because their holding period is unknown
+              (broker exports like Groww don&apos;t include the buy date). Your real tax is likely higher than shown.{" "}
+              <Link href="/holdings" className="underline hover:text-white">
+                Set purchase dates on the Holdings page
+              </Link>{" "}
+              to get a complete estimate.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Info callout */}
       {!isLoading && (
         <div className="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-xs text-gray-500 leading-relaxed">
           <strong className="text-gray-400">Disclaimer:</strong> These are estimates only. LTCG on equity mutual
           funds is taxed at 12.5% on gains exceeding ₹1.25 lakh per year (Finance Act 2024, effective 23 Jul 2024).
           STCG is taxed at 20%. FD interest is taxed at your income slab rate. Consult a tax professional for
-          precise calculations. Holding period uses purchase date where available, otherwise last NAV update date.
+          precise calculations. Holdings without a recorded purchase date are marked &quot;Unknown&quot; and excluded
+          from the estimate — set their purchase date on the Holdings page to include them.
         </div>
       )}
 

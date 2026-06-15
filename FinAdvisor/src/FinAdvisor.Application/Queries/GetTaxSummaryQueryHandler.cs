@@ -50,8 +50,12 @@ public class GetTaxSummaryQueryHandler(
         var totalInvestedSection80C = Math.Min(grossSection80C, Section80CLimit);
 
         // Holdings tax analysis.
-        // Uses PurchaseDate when available (set from CAS transaction history or manual entry).
-        // Falls back to AsOf (NAV update date) only for legacy holdings that pre-date the field.
+        // LTCG/STCG classification REQUIRES a real purchase date. When PurchaseDate is null
+        // (e.g. broker exports like Groww that omit the buy date, or manual rows left blank),
+        // we DO NOT guess. Previously the code fell back to AsOf (the NAV/import date), which
+        // made every imported holding look <12 months old and wrongly taxed everything as STCG.
+        // Per the project rule "the rules engine never produces wrong numbers", such holdings
+        // are reported as "Unknown" and excluded from the tax totals until the user sets a date.
         decimal ltcgGains = 0m;
         decimal stcgGains = 0m;
         var taxHoldings = new List<TaxHoldingDto>();
@@ -63,43 +67,63 @@ public class GetTaxSummaryQueryHandler(
                 continue;
 
             var gainLoss = (h.CurrentNav - h.PurchaseNav) * h.Units;
-            // Prefer explicit purchase date; fall back to AsOf for legacy rows.
-            var acquisitionDate = h.PurchaseDate ?? DateOnly.FromDateTime(h.AsOf.LocalDateTime);
-            var holdingMonths = Math.Max(0,
-                (today.Year - acquisitionDate.Year) * 12 + today.Month - acquisitionDate.Month);
 
             string taxCategory;
+            int holdingMonths;
+            string acquisitionLabel;
+
             if (h.HoldingType == HoldingType.FD)
             {
-                // FD interest is taxed at slab rate; show as "Slab" category
+                // FD interest is taxed at slab rate; gains/duration not classified as LTCG/STCG.
                 taxCategory = "Slab";
+                holdingMonths = h.PurchaseDate is { } fdDate
+                    ? Math.Max(0, (today.Year - fdDate.Year) * 12 + today.Month - fdDate.Month)
+                    : 0;
+                acquisitionLabel = h.PurchaseDate?.ToString("yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture) ?? "";
             }
-            else if (holdingMonths > 12)
+            else if (h.PurchaseDate is null)
             {
-                taxCategory = "LTCG";
-                if (gainLoss > 0) ltcgGains += gainLoss;
+                // No reliable purchase date — do not fabricate a classification or tax.
+                taxCategory = "Unknown";
+                holdingMonths = 0;
+                acquisitionLabel = "";
             }
             else
             {
-                taxCategory = "STCG";
-                if (gainLoss > 0) stcgGains += gainLoss;
+                var acquisitionDate = h.PurchaseDate.Value;
+                holdingMonths = Math.Max(0,
+                    (today.Year - acquisitionDate.Year) * 12 + today.Month - acquisitionDate.Month);
+                acquisitionLabel = acquisitionDate.ToString("yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture);
+
+                if (holdingMonths > 12)
+                {
+                    taxCategory = "LTCG";
+                    if (gainLoss > 0) ltcgGains += gainLoss;
+                }
+                else
+                {
+                    taxCategory = "STCG";
+                    if (gainLoss > 0) stcgGains += gainLoss;
+                }
             }
 
             taxHoldings.Add(new TaxHoldingDto(
                 h.Name,
-                acquisitionDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                acquisitionLabel,
                 h.CurrentValue,
                 Math.Round(gainLoss, 2),
                 holdingMonths,
                 taxCategory));
         }
 
-        // LTCG tax: 10% on gains above ₹1 lakh exemption
+        // LTCG tax: 12.5% on gains above ₹1.25 lakh exemption (Finance Act 2024)
         var estimatedLtcgTax = ltcgGains > LtcgExemptionLimit
             ? Math.Round((ltcgGains - LtcgExemptionLimit) * LtcgRate, 2)
             : 0m;
 
-        // STCG tax: flat 15%
+        // STCG tax: flat 20% (Finance Act 2024)
         var estimatedStcgTax = Math.Round(stcgGains * StcgRate, 2);
 
         return new TaxSummaryDto(
