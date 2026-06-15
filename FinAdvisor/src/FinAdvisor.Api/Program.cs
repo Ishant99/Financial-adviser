@@ -74,6 +74,9 @@ try
     builder.Services.AddScoped<AddSipPlanCommandHandler>();
     builder.Services.AddScoped<PauseResumeSipPlanCommandHandler>();
     builder.Services.AddScoped<ImportCasHoldingsCommandHandler>();
+    builder.Services.AddScoped<ImportBankStatementCommandHandler>();
+    builder.Services.AddScoped<ImportBrokerHoldingsCommandHandler>();
+    builder.Services.AddScoped<BulkImportSipsCommandHandler>();
     builder.Services.AddScoped<GenerateRecommendationsCommandHandler>();
     builder.Services.AddScoped<GenerateMonthlyPlanCommandHandler>();
     builder.Services.AddScoped<GetRecommendationsQueryHandler>();

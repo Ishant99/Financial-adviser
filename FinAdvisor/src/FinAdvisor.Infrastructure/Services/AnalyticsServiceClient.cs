@@ -54,6 +54,107 @@ public class AnalyticsServiceClient(HttpClient http, ILogger<AnalyticsServiceCli
                 h.EarliestPurchaseDate)).ToList());
     }
 
+    public async Task<SipImportParseResult> ParseSipExportAsync(
+        Stream fileStream, string fileName, CancellationToken ct = default)
+    {
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(fileStream), "file", fileName);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "parse-sip-export") { Content = content };
+        request.Headers.Add("X-Correlation-ID",
+            Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"));
+
+        var response = await http.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = await response.Content.ReadAsStringAsync(ct);
+            throw new AnalyticsServiceException($"SIP export parse failed ({(int)response.StatusCode}): {detail}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<PythonSipImportResponse>(ct)
+            ?? throw new AnalyticsServiceException("Empty response from analytics service");
+
+        return new SipImportParseResult(
+            result.source,
+            result.sips.Select(s => new ImportedSipResult(
+                s.fund_name, s.fund_code, s.monthly_amount,
+                s.sip_date, s.start_date, s.benchmark_index, s.status)).ToList());
+    }
+
+    public async Task<HoldingsImportParseResult> ParseHoldingsExportAsync(
+        Stream fileStream,
+        string fileName,
+        CancellationToken ct = default)
+    {
+        using var content = new MultipartFormDataContent();
+        var streamContent = new StreamContent(fileStream);
+        content.Add(streamContent, "file", fileName);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "parse-holdings-export") { Content = content };
+        request.Headers.Add("X-Correlation-ID",
+            Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"));
+
+        var response = await http.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = await response.Content.ReadAsStringAsync(ct);
+            throw new AnalyticsServiceException($"Holdings export parse failed ({(int)response.StatusCode}): {detail}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<PythonHoldingsImportResponse>(ct)
+            ?? throw new AnalyticsServiceException("Empty response from analytics service");
+
+        return new HoldingsImportParseResult(
+            result.source,
+            result.as_of_date,
+            result.total_invested,
+            result.total_current_value,
+            result.holdings.Select(h => new ImportedHoldingResult(
+                h.scheme_name, h.amc, h.category, h.sub_category, h.folio,
+                h.units, h.invested_value, h.current_value,
+                h.purchase_nav, h.current_nav, h.xirr)).ToList());
+    }
+
+    public async Task<BankStatementParseResult> ParseBankStatementAsync(
+        Stream pdfStream,
+        string? password,
+        CancellationToken ct = default)
+    {
+        using var content = new MultipartFormDataContent();
+        var streamContent = new StreamContent(pdfStream);
+        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+        content.Add(streamContent, "file", "statement.pdf");
+        if (!string.IsNullOrEmpty(password))
+            content.Add(new StringContent(password), "password");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "parse-bank-statement") { Content = content };
+        request.Headers.Add("X-Correlation-ID",
+            Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"));
+
+        logger.LogInformation("Calling analytics service /parse-bank-statement");
+        var response = await http.SendAsync(request, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = await response.Content.ReadAsStringAsync(ct);
+            logger.LogWarning("Analytics service /parse-bank-statement returned {Status}: {Detail}",
+                (int)response.StatusCode, detail);
+            throw new AnalyticsServiceException(
+                $"Bank statement parse failed ({(int)response.StatusCode}): {detail}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<PythonBankStatementResponse>(ct)
+            ?? throw new AnalyticsServiceException("Empty response from analytics service");
+
+        return new BankStatementParseResult(
+            result.bank_name,
+            result.account_number,
+            result.period_from,
+            result.period_to,
+            result.opening_balance,
+            result.transactions.Select(t => new BankTransactionResult(
+                t.date, t.description, t.debit, t.credit, t.balance, t.category)).ToList());
+    }
+
     public async Task<MonthlyPlanResponse> GenerateMonthlyPlanAsync(
         MonthlyPlanContext context, CancellationToken ct = default)
     {
@@ -205,6 +306,34 @@ public class AnalyticsServiceClient(HttpClient http, ILogger<AnalyticsServiceCli
     {
         public List<PythonRecommendation> Recommendations => recommendations;
     }
+
+    private sealed record PythonImportedSip(
+        string fund_name, string fund_code, decimal monthly_amount,
+        int sip_date, string start_date, string benchmark_index, string status);
+
+    private sealed record PythonSipImportResponse(string source, List<PythonImportedSip> sips);
+
+    private sealed record PythonImportedHolding(
+        string scheme_name, string? amc, string? category, string? sub_category,
+        string? folio, decimal units, decimal invested_value, decimal current_value,
+        decimal purchase_nav, decimal current_nav, decimal? xirr);
+
+    private sealed record PythonHoldingsImportResponse(
+        string source, string? as_of_date,
+        decimal total_invested, decimal total_current_value,
+        List<PythonImportedHolding> holdings);
+
+    private sealed record PythonBankTransaction(
+        string date, string description,
+        decimal? debit, decimal? credit, decimal? balance, string category);
+
+    private sealed record PythonBankStatementResponse(
+        string bank_name,
+        string? account_number,
+        string? period_from,
+        string? period_to,
+        decimal? opening_balance,
+        List<PythonBankTransaction> transactions);
 
     private sealed record PythonRecommendation(
         string type,

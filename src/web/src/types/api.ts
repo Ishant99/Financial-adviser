@@ -258,6 +258,30 @@ export interface PortfolioAnalyticsDto {
   sharpeRatio?: number;
 }
 
+export interface SipBulkImportResult {
+  imported: number;
+  skipped: number;
+  source: string;
+}
+
+export interface HoldingsImportResult {
+  imported: number;
+  updated: number;
+  skipped: number;
+  source: string;
+  totalCurrentValue: number;
+}
+
+export interface BankStatementImportResult {
+  imported: number;
+  updated: number;
+  skipped: number;
+  bankName: string;
+  accountNumber?: string;
+  periodFrom?: string;
+  periodTo?: string;
+}
+
 export interface CasImportResult {
   holdingsImported: number;
   holdingsUpdated: number;

@@ -11,6 +11,9 @@ namespace FinAdvisor.Api.Controllers;
 public class UploadController(
     IAnalyticsService analytics,
     ImportCasHoldingsCommandHandler importHandler,
+    ImportBankStatementCommandHandler importBankHandler,
+    ImportBrokerHoldingsCommandHandler importBrokerHandler,
+    BulkImportSipsCommandHandler importSipsHandler,
     ILogger<UploadController> logger) : ControllerBase
 {
     [HttpPost("cas")]
@@ -44,6 +47,107 @@ public class UploadController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error during CAS upload for {FileName}", file.FileName);
+            return StatusCode(500, new { error = "An unexpected error occurred." });
+        }
+    }
+
+    [HttpPost("sips")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<SipBulkImportResult>> UploadSips(
+        IFormFile file,
+        CancellationToken ct)
+    {
+        if (file is null || file.Length == 0) return BadRequest("No file uploaded.");
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext is not (".xlsx" or ".xls" or ".csv"))
+            return BadRequest("Only Excel (.xlsx) or CSV (.csv) files are accepted.");
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var parsed = await analytics.ParseSipExportAsync(stream, file.FileName, ct);
+            var result = await importSipsHandler.HandleAsync(parsed, ct);
+            return Ok(result);
+        }
+        catch (AnalyticsServiceException ex)
+        {
+            logger.LogWarning(ex, "SIP import parse failed for {FileName}", file.FileName);
+            return UnprocessableEntity(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during SIP import for {FileName}", file.FileName);
+            return StatusCode(500, new { error = "An unexpected error occurred." });
+        }
+    }
+
+    [HttpPost("broker-holdings")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<HoldingsImportResult>> UploadBrokerHoldings(
+        IFormFile file,
+        [FromForm] Guid accountId,
+        CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest("No file uploaded.");
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext is not (".xlsx" or ".xls" or ".csv"))
+            return BadRequest("Only Excel (.xlsx) or CSV (.csv) files are accepted.");
+        if (accountId == Guid.Empty)
+            return BadRequest("accountId is required.");
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var parsed = await analytics.ParseHoldingsExportAsync(stream, file.FileName, ct);
+            var result = await importBrokerHandler.HandleAsync(parsed, accountId, ct);
+            return Ok(result);
+        }
+        catch (AnalyticsServiceException ex)
+        {
+            logger.LogWarning(ex, "Broker holdings parse failed for {FileName}", file.FileName);
+            return UnprocessableEntity(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during broker holdings upload for {FileName}", file.FileName);
+            return StatusCode(500, new { error = "An unexpected error occurred." });
+        }
+    }
+
+    [HttpPost("bank-statement")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<BankStatementImportResult>> UploadBankStatement(
+        IFormFile file,
+        [FromForm] string? password,
+        [FromForm] Guid accountId,
+        CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest("No file uploaded.");
+        if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("Only PDF files are accepted.");
+        if (accountId == Guid.Empty)
+            return BadRequest("accountId is required.");
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var parsed = await analytics.ParseBankStatementAsync(stream, password, ct);
+            var result = await importBankHandler.HandleAsync(parsed, accountId, ct);
+            return Ok(result);
+        }
+        catch (AnalyticsServiceException ex)
+        {
+            logger.LogWarning(ex, "Bank statement parse failed for {FileName}", file.FileName);
+            return UnprocessableEntity(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during bank statement upload for {FileName}", file.FileName);
             return StatusCode(500, new { error = "An unexpected error occurred." });
         }
     }

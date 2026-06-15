@@ -6,6 +6,12 @@ public interface IAnalyticsService
 {
     Task<CasParseResult> ParseCasAsync(Stream pdfStream, string? password, CancellationToken ct = default);
 
+    Task<BankStatementParseResult> ParseBankStatementAsync(Stream pdfStream, string? password, CancellationToken ct = default);
+
+    Task<HoldingsImportParseResult> ParseHoldingsExportAsync(Stream fileStream, string fileName, CancellationToken ct = default);
+
+    Task<SipImportParseResult> ParseSipExportAsync(Stream fileStream, string fileName, CancellationToken ct = default);
+
     Task<IReadOnlyList<GeneratedRecommendationResult>> GenerateRecommendationsAsync(
         GenerateRecommendationsRequest request,
         CancellationToken ct = default);

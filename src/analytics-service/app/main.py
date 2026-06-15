@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import cas, health, plan, recommendations, simulation, xirr
+from app.routers import bank_statement, cas, health, holdings_import, plan, recommendations, simulation, sip_import, xirr
 
 app = FastAPI(
     title="FinAdvisor Analytics Service",
@@ -22,3 +22,6 @@ app.include_router(recommendations.router)
 app.include_router(simulation.router)
 app.include_router(xirr.router)
 app.include_router(plan.router)
+app.include_router(bank_statement.router)
+app.include_router(holdings_import.router)
+app.include_router(sip_import.router)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ import {
 import {
   useTransactions, useAddTransaction, useUpdateTransaction, useDeleteTransaction,
 } from "@/lib/queries/useTransactions";
-import { useAccounts } from "@/lib/queries/useAccounts";
+import { AccountSelect } from "@/components/ui/account-select";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { Segmented } from "@/components/ui/segmented";
@@ -77,8 +77,7 @@ function TxForm({
   isSubmitting: boolean;
   mode: "add" | "edit";
 }) {
-  const { data: accounts = [] } = useAccounts();
-  const { register, handleSubmit, formState: { errors } } = useForm<TxValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<TxValues>({
     resolver: zodResolver(txSchema),
     defaultValues: { transactionType: "Debit", description: "", ...defaultValues },
   });
@@ -86,17 +85,16 @@ function TxForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
       {mode === "add" && (
-        <Field label="Account" error={errors.accountId?.message}>
-          <select
-            {...register("accountId")}
-            className="h-8 w-full rounded-lg border border-gray-700 bg-gray-800 px-2.5 py-1 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Select account…</option>
-            {accounts.filter((a) => a.isActive).map((a) => (
-              <option key={a.id} value={a.id}>{a.name} — {a.institutionName}</option>
-            ))}
-          </select>
-        </Field>
+        <div>
+          <Controller
+            control={control}
+            name="accountId"
+            render={({ field }) => (
+              <AccountSelect value={field.value ?? ""} onChange={field.onChange} />
+            )}
+          />
+          {errors.accountId && <p className="text-xs text-red-400 mt-1">{errors.accountId.message}</p>}
+        </div>
       )}
       <div className="grid grid-cols-2 gap-3">
         <Field label="Date" error={errors.date?.message}>
@@ -173,7 +171,8 @@ function SortButton({ field, current, dir, onSort }: {
 
 export default function TransactionsPage() {
   const today = new Date();
-  const defaultFrom = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
+  // Default to the last 12 months so an imported year of statements is visible at a glance.
+  const defaultFrom = new Date(today.getFullYear() - 1, today.getMonth(), 1).toISOString().slice(0, 10);
   const defaultTo = today.toISOString().slice(0, 10);
 
   const [from, setFrom] = useState(defaultFrom);
