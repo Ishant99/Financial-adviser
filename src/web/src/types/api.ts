@@ -151,6 +151,13 @@ export interface AccountDto {
   isActive: boolean;
 }
 
+export interface AddAccountRequest {
+  name: string;
+  accountType: string;
+  institutionName: string;
+  accountNumber?: string;
+}
+
 export interface MonthlyPlanSection {
   title: string;
   amount?: number;

@@ -7,3 +7,9 @@ public record AccountDto(
     string InstitutionName,
     string? AccountNumber,
     bool IsActive);
+
+public record AddAccountRequest(
+    string Name,
+    string AccountType,
+    string InstitutionName,
+    string? AccountNumber);

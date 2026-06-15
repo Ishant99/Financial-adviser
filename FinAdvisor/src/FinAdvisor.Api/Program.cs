@@ -1,4 +1,5 @@
 using FinAdvisor.Api;
+using FinAdvisor.Application.Commands.Accounts;
 using FinAdvisor.Application.Commands.Goals;
 using FinAdvisor.Application.Commands.Holdings;
 using FinAdvisor.Application.Commands.Plan;
@@ -60,6 +61,7 @@ try
     builder.Services.AddScoped<GetAccountsQueryHandler>();
 
     // Command handlers
+    builder.Services.AddScoped<CreateAccountCommandHandler>();
     builder.Services.AddScoped<AddHoldingCommandHandler>();
     builder.Services.AddScoped<UpdateHoldingCommandHandler>();
     builder.Services.AddScoped<DeleteHoldingCommandHandler>();
